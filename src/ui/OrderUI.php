@@ -31,7 +31,6 @@ class OrderUI
      */
     public function showOrders(): void
     {
-        <?php
         $user = $this->permission->requireRole([UserRole::BusinessOwner, UserRole::OfficeStaff]);
         $orders = $this->orders->getOrders();
 
@@ -61,7 +60,6 @@ class OrderUI
      */
     public function showNewOrderForm(string $customerId): void
     {
-        <?php
         $user = $this->permission->requireRole([UserRole::BusinessOwner, UserRole::OfficeStaff]);
         $customer = $this->customers->getCustomerById($customerId);
         $items = $this->inventory->getItems();
@@ -95,7 +93,6 @@ class OrderUI
      */
     public function submitOrder(array $form): void
     {
-        <?php
         $this->permission->requireRole([UserRole::BusinessOwner, UserRole::OfficeStaff]);
 
         try {
@@ -130,7 +127,6 @@ class OrderUI
      */
     public function submitCancel(string $orderId): void
     {
-        <?php
         $this->permission->requireRole([UserRole::BusinessOwner, UserRole::OfficeStaff]);
 
         try {
@@ -147,7 +143,6 @@ class OrderUI
      */
     public function submitGenerateInvoice(string $orderId): void
     {
-        <?php
         $this->permission->requireRole([UserRole::BusinessOwner, UserRole::OfficeStaff]);
 
         try {
@@ -164,7 +159,6 @@ class OrderUI
      */
     public function submitConfirm(string $orderId): void
     {
-        /<?php
         $this->permission->requireRole([UserRole::BusinessOwner, UserRole::OfficeStaff]);
 
         try {
@@ -181,7 +175,6 @@ class OrderUI
      */
     public function downloadInvoice(string $orderId): void
     {
-        <?php
         $this->permission->requireRole([UserRole::BusinessOwner, UserRole::OfficeStaff]);
 
         $order = $this->orders->getOrderById($orderId);
