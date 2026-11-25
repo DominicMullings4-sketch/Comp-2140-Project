@@ -35,8 +35,7 @@ class OrderMgmt
      */
     public function addOrderLine(Order $order, Item $item, int $quantity): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::addOrderLine() is not built yet.');
+       $order->addLine($item, $quantity);
     }
 
     /**
@@ -45,8 +44,18 @@ class OrderMgmt
      */
     public function saveOrder(Order $order): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::saveOrder() is not built yet.');
+        $this->db->beginTransaction();
+        try {
+            // INSERT into orders using the order's getters.
+            foreach ($order->getLines() as $line) {
+                // INSERT into order_lines; save item ID, quantity, and unit price.
+            }
+            $this->inventory->reserveStock($order);
+            $this->db->commit();
+        } catch (Throwable $exception) {
+            $this->db->rollback();
+            throw $exception;
+        }
     }
 
     /**
@@ -55,8 +64,16 @@ class OrderMgmt
      */
     public function getOrders(): array
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::getOrders() is not built yet.');
+        $rows = $this->db->select(
+            'SELECT order_id FROM orders ORDER BY entered_at DESC',
+            []
+        );
+
+        $orders = [];
+        foreach ($rows as $row) {
+            $orders[] = $this->getOrderById($row['order_id']);
+        }
+        return $orders;
     }
 
     /**
@@ -66,8 +83,85 @@ class OrderMgmt
      */
     public function getOrderById(string $orderId): Order
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::getOrderById() is not built yet.');
+        $orderRows = $this->db->select(
+        'SELECT * FROM orders WHERE order_id = :order_id',
+        ['order_id' => $orderId]
+    );
+
+    if (count($orderRows) === 0) {
+        throw new Exception('Order not found.');
+    }
+
+    $orderRow = $orderRows[0];
+
+    $customerRows = $this->db->select(
+        'SELECT * FROM customers WHERE customer_id = :customer_id',
+        ['customer_id' => $orderRow['customer_id']]
+    );
+
+    if (count($customerRows) === 0) {
+        throw new Exception('Customer not found for this order.');
+    }
+
+    $customer = Customer::fromRow($customerRows[0]);
+
+    $lineRows = $this->db->select(
+        'SELECT ol.quantity_ordered, ol.unit_price,
+                i.item_id, i.name, i.selling_price,
+                i.stock_quantity, i.reserved_quantity
+         FROM order_lines ol
+         JOIN items i ON i.item_id = ol.item_id
+         WHERE ol.order_id = :order_id
+         ORDER BY ol.line_id',
+        ['order_id' => $orderId]
+    );
+
+    $lines = [];
+    foreach ($lineRows as $lineRow) {
+        $item = Item::fromRow($lineRow);
+        $lines[] = OrderLine::fromRow($lineRow, $item);
+    }
+
+    $order = Order::fromRow($orderRow, $customer, $lines);
+
+    $deliveryRows = $this->db->select(
+        'SELECT * FROM deliveries
+         WHERE order_id = :order_id
+         ORDER BY assigned_at',
+        ['order_id' => $orderId]
+    );
+
+    foreach ($deliveryRows as $deliveryRow) {
+        $workerRows = $this->db->select(
+            'SELECT * FROM users WHERE user_id = :user_id',
+            ['user_id' => $deliveryRow['worker_id']]
+        );
+
+        if (count($workerRows) === 0) {
+            throw new Exception('Delivery worker not found.');
+        }
+
+        $recordedBy = null;
+        if ($deliveryRow['outcome_recorded_by'] !== null) {
+            $recordedByRows = $this->db->select(
+                'SELECT * FROM users WHERE user_id = :user_id',
+                ['user_id' => $deliveryRow['outcome_recorded_by']]
+            );
+
+            if (count($recordedByRows) > 0) {
+                $recordedBy = User::fromRow($recordedByRows[0]);
+            }
+        }
+
+        Delivery::fromRow(
+            $deliveryRow,
+            $order,
+            User::fromRow($workerRows[0]),
+            $recordedBy
+        );
+    }
+
+    return $order;
     }
 
     /**
@@ -76,8 +170,17 @@ class OrderMgmt
      */
     public function cancelOrder(Order $order): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::cancelOrder() is not built yet.');
+        $this->db->beginTransaction();
+        try {
+            $order->cancelOrder();
+            // UPDATE orders.order_status.
+            $this->inventory->releaseStock($order);
+            // If an invoice exists, mark it void and UPDATE invoices.status.
+            $this->db->commit();
+        } catch (Throwable $exception) {
+            $this->db->rollback();
+            throw $exception;
+        }
     }
 
     /**
@@ -86,8 +189,8 @@ class OrderMgmt
      */
     public function generateInvoice(Order $order): Invoice
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::generateInvoice() is not built yet.');
+        $invoice = new Invoice($order);
+        return $invoice;
     }
 
     /**
@@ -95,8 +198,7 @@ class OrderMgmt
      */
     public function confirmOrder(Order $order): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::confirmOrder() is not built yet.');
+        $order->confirmOrder();
     }
 
     /**
@@ -106,7 +208,7 @@ class OrderMgmt
      */
     public function downloadInvoicePdf(Invoice $invoice): string
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::downloadInvoicePdf() is not built yet.');
+        $pdfPath = /* generated file path */;
+        return $pdfPath;
     }
 }
