@@ -3,19 +3,19 @@
 -- DEVELOPMENT ONLY: never load this onto a database with real customer data.
 --
 -- Test accounts (all use the password  TrackIt-Demo-2026! ):
---   staff1   Staff
---   bearer1  Bearer
---   bearer2  Bearer
+--   staff1   OfficeStaff
+--   bearer1  DeliveryWorker
+--   bearer2  DeliveryWorker
 -- =============================================================
 
 USE track_it;
 
-INSERT INTO users (username, password_hash, role) VALUES
-('staff1',  '$2y$10$JHR7VQQg4A75ja/piExtHOozLPUuiInVxnI/tM/wR76wvYpeEgv3u', 'Staff'),
-('bearer1', '$2y$10$JHR7VQQg4A75ja/piExtHOozLPUuiInVxnI/tM/wR76wvYpeEgv3u', 'Bearer'),
-('bearer2', '$2y$10$JHR7VQQg4A75ja/piExtHOozLPUuiInVxnI/tM/wR76wvYpeEgv3u', 'Bearer');
+INSERT INTO users (name, username, password_hash, role) VALUES
+('Staff One',  'staff1',  '$2y$10$JHR7VQQg4A75ja/piExtHOozLPUuiInVxnI/tM/wR76wvYpeEgv3u', 'OfficeStaff'),
+('Bearer One', 'bearer1', '$2y$10$JHR7VQQg4A75ja/piExtHOozLPUuiInVxnI/tM/wR76wvYpeEgv3u', 'DeliveryWorker'),
+('Bearer Two', 'bearer2', '$2y$10$JHR7VQQg4A75ja/piExtHOozLPUuiInVxnI/tM/wR76wvYpeEgv3u', 'DeliveryWorker');
 
-INSERT INTO products (name, quantity, selling_price) VALUES
+INSERT INTO items (name, stock_quantity, selling_price) VALUES
 ('Phone case - Black',      25,  1500.00),
 ('USB-C charger 20W',       12,  3200.00),
 ('Wireless earbuds',         8,  6500.00),

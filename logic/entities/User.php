@@ -6,11 +6,12 @@
  */
 class User
 {
-    // The two roles (stored in users.role). Use these instead of typing 'Staff' or 'Bearer'.
-    public const ROLE_STAFF = 'Staff';
-    public const ROLE_BEARER = 'Bearer';
+    // The two roles (stored in users.role). Use these instead of typing 'OfficeStaff' or 'DeliveryWorker'.
+    public const ROLE_STAFF = 'OfficeStaff';
+    public const ROLE_BEARER = 'DeliveryWorker';
 
     public int $id;
+    public string $name;
     public string $username;
     public string $passwordHash;
     public ?string $twoFactorSecret;
@@ -20,7 +21,8 @@ class User
     public static function fromRow(array $row): User
     {
         $user = new User();
-        $user->id = (int) $row['id'];
+        $user->id = (int) $row['user_id'];
+        $user->name = $row['name'];
         $user->username = $row['username'];
         $user->passwordHash = $row['password_hash'];
         $user->twoFactorSecret = $row['two_factor_secret'];

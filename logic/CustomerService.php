@@ -31,7 +31,7 @@ class CustomerService
 
     public function getCustomer(int $id): ?Customer
     {
-        $row = $this->db->selectOne('SELECT * FROM customers WHERE id = :id', ['id' => $id]);
+        $row = $this->db->selectOne('SELECT * FROM customers WHERE customer_id = :id', ['id' => $id]);
         return $row === null ? null : Customer::fromRow($row);
     }
 
@@ -73,7 +73,7 @@ class CustomerService
         $this->db->execute(
             'UPDATE customers
              SET name = :name, delivery_address = :address, phone = :phone, email = :email
-             WHERE id = :id',
+             WHERE customer_id = :id',
             ['name' => $name, 'address' => $address, 'phone' => $phone, 'email' => $email, 'id' => $id]
         );
         return [];
@@ -113,7 +113,7 @@ class CustomerService
         // No duplicates (3.2). Only checked once the format is right.
         if (count($errors) === 0) {
             $samePhone = $this->db->selectOne(
-                'SELECT id FROM customers WHERE phone = :phone AND id <> :exclude',
+                'SELECT customer_id FROM customers WHERE phone = :phone AND customer_id <> :exclude',
                 ['phone' => $phone, 'exclude' => $excludeId]
             );
             if ($samePhone !== null) {
@@ -121,7 +121,7 @@ class CustomerService
             }
 
             $sameEmail = $this->db->selectOne(
-                'SELECT id FROM customers WHERE email = :email AND id <> :exclude',
+                'SELECT customer_id FROM customers WHERE email = :email AND customer_id <> :exclude',
                 ['email' => $email, 'exclude' => $excludeId]
             );
             if ($sameEmail !== null) {

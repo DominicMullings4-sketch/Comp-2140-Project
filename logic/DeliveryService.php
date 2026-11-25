@@ -35,10 +35,13 @@ class DeliveryService
 
     /**
      * Every order due on a date, with customer name and assigned bearer, for the staff deliveries page.
-     * SQL: SELECT o.*, c.name AS customer_name, u.username AS bearer_username
-     *      FROM orders o JOIN customers c ON c.id = o.customer_id
-     *      LEFT JOIN users u ON u.id = o.bearer_id
-     *      WHERE o.delivery_date = :date
+     * SQL: SELECT o.*, c.name AS customer_name, u.username AS bearer_username,
+     *             d.delivery_id, d.delivery_date, d.status, d.worker_id, d.comment
+     *      FROM deliveries d
+     *      JOIN orders o ON o.order_id = d.order_id
+     *      JOIN customers c ON c.customer_id = o.customer_id
+     *      LEFT JOIN users u ON u.user_id = d.worker_id
+     *      WHERE d.delivery_date = :date
      * @return Order[]
      */
     public function getOrdersForDate(string $date): array
@@ -54,9 +57,9 @@ class DeliveryService
     }
 
     /**
-     * 5.5: assigns a bearer to an order. Check the bearer exists and really has the Bearer role.
+     * 5.5: assigns a bearer to an order. Check the bearer exists and really has the User::ROLE_BEARER role.
      * The status stays 'Pending' until the delivery date (5.6).
-     * SQL: UPDATE orders SET bearer_id = :bearer WHERE id = :id
+     * SQL: UPDATE deliveries SET worker_id = :bearer, assigned_at = NOW() WHERE order_id = :id
      * @return string[] error messages (empty = saved)
      */
     public function assignBearer(int $orderId, int $bearerId): array
@@ -68,8 +71,8 @@ class DeliveryService
     /**
      * 5.6: on the delivery date, assigned 'Pending' orders become 'Out for delivery'.
      * Called at the top of the delivery pages. One UPDATE:
-     * SQL: UPDATE orders SET status = 'Out for delivery'
-     *      WHERE bearer_id IS NOT NULL AND status = 'Pending' AND delivery_date <= :today
+     * SQL: UPDATE deliveries SET status = 'Out for delivery'
+     *      WHERE worker_id IS NOT NULL AND status = 'Pending' AND delivery_date <= :today
      */
     public function refreshStatuses(): void
     {

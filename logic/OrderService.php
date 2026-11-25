@@ -7,11 +7,14 @@
  * Tip for reading an order with the customer's details: use a JOIN and name the extra columns so
  * Order::fromRow() picks them up:
  *   SELECT o.*, c.name AS customer_name, c.phone AS customer_phone,
- *          c.delivery_address AS customer_address, c.email AS customer_email
- *   FROM orders o JOIN customers c ON c.id = o.customer_id
- *   WHERE o.id = :id
- * And for the lines with product names:
- *   SELECT l.*, p.name AS product_name FROM order_lines l JOIN products p ON p.id = l.product_id
+ *          c.delivery_address AS customer_address, c.email AS customer_email,
+ *          d.delivery_id, d.delivery_date, d.status, d.worker_id, d.comment
+ *   FROM orders o
+ *   JOIN customers c ON c.customer_id = o.customer_id
+ *   LEFT JOIN deliveries d ON d.order_id = o.order_id
+ *   WHERE o.order_id = :id
+ * And for the lines with item names:
+ *   SELECT l.*, p.name AS product_name FROM order_lines l JOIN items p ON p.item_id = l.item_id
  *   WHERE l.order_id = :id
  */
 class OrderService
@@ -40,11 +43,12 @@ class OrderService
      * If all pass:
      *   - 5.1: $deliveryDate = $this->delivery->calculateDeliveryDate(new DateTime());
      *   - save in ONE transaction (see DataAccess.php):
-     *       1. INSERT INTO orders (customer_id, delivery_date) VALUES (...)       (status starts as 'Pending')
+     *       1. INSERT INTO orders (customer_id, created_at) VALUES (...)
      *       2. $orderId = $this->db->lastInsertId();
-     *       3. for each line: INSERT INTO order_lines (order_id, product_id, quantity, unit_price) ...
-     *          (unit_price = the product's selling price right now)
-     *       4. for each line: UPDATE products SET quantity = quantity - :qty WHERE id = :product_id   (4.5)
+     *       3. INSERT INTO deliveries (order_id, delivery_date) VALUES (...)       (status starts as 'Pending')
+     *       4. for each line: INSERT INTO order_lines (order_id, item_id, quantity_ordered, unit_price) ...
+     *          (unit_price = the item's selling price right now)
+     *       5. for each line: UPDATE items SET stock_quantity = stock_quantity - :qty WHERE item_id = :item_id   (4.5)
      *
      * @return array ['errors' => string[], 'id' => int|null]  (id is the new order id when saved)
      */
@@ -53,7 +57,7 @@ class OrderService
         $errors = [];
 
         // PART 1 - 4.1: the customer must exist
-        $customer = $this->db->select('SELECT id FROM customers WHERE id = :id', ['id' => $customerId]);
+        $customer = $this->db->select('SELECT customer_id FROM customers WHERE customer_id = :id', ['id' => $customerId]);
         if (count($customer) === 0) {
             $errors[] = 'Choose a customer.';
         }
@@ -116,25 +120,32 @@ class OrderService
             return ['errors' => $errors, 'id' => null];
         }
 
-        // PART 5 - save the order, its lines and the reduced stock in ONE transaction.
+        // PART 5 - save the order, its delivery, its lines and the reduced stock in ONE transaction.
         $now = new DateTime();
         $deliveryDate = $this->delivery->calculateDeliveryDate($now);   // 5.1, 5.3, 5.4 (your Step 1)
 
         $this->db->beginTransaction();
         try {
-            // Step 1: the order itself, linked to the customer (4.6). Status starts as 'Pending' (5.2).
+            // Step 1: the order itself, linked to the customer (4.6)
             $this->db->execute(
-                'INSERT INTO orders (customer_id, created_at, delivery_date) VALUES (:customer, :created, :delivery)',
-                ['customer' => $customerId, 'created' => $now->format('Y-m-d H:i:s'), 'delivery' => $deliveryDate]
+                'INSERT INTO orders (customer_id, created_at) VALUES (:customer, :created)',
+                ['customer' => $customerId, 'created' => $now->format('Y-m-d H:i:s')]
             );
 
             // Step 2: the id MySQL just gave the order
             $orderId = $this->db->lastInsertId();
 
+            // Step 2b: the order's delivery (5.1), in the deliveries table.
+            // Status starts as 'Pending' (5.2) and no worker is assigned yet (the table's defaults).
+            $this->db->execute(
+                'INSERT INTO deliveries (order_id, delivery_date) VALUES (:order, :delivery)',
+                ['order' => $orderId, 'delivery' => $deliveryDate]
+            );
+
             foreach ($cleanLines as $line) {
                 // Step 3: one row per product ordered, with the price at the time of the order
                 $this->db->execute(
-                    'INSERT INTO order_lines (order_id, product_id, quantity, unit_price)
+                    'INSERT INTO order_lines (order_id, item_id, quantity_ordered, unit_price)
                      VALUES (:order, :product, :quantity, :price)',
                     [
                         'order' => $orderId,
@@ -146,7 +157,7 @@ class OrderService
 
                 // Step 4: reduce that product's stock (4.5)
                 $this->db->execute(
-                    'UPDATE products SET quantity = quantity - :quantity WHERE id = :product',
+                    'UPDATE items SET stock_quantity = stock_quantity - :quantity WHERE item_id = :product',
                     ['quantity' => $line['quantity'], 'product' => $line['product_id']]
                 );
             }
@@ -164,12 +175,15 @@ class OrderService
     public function getOrder(int $id): ?Order
     {
         // 1. The order, with its customer's details (the JOIN adds them, renamed so Order::fromRow() picks them up)
+        //    and its delivery details (LEFT JOIN: the order still shows even if it has no delivery row)
         $row = $this->db->selectOne(
             'SELECT o.*, c.name AS customer_name, c.phone AS customer_phone,
-                    c.delivery_address AS customer_address, c.email AS customer_email
+                    c.delivery_address AS customer_address, c.email AS customer_email,
+                    d.delivery_id, d.delivery_date, d.status, d.worker_id, d.comment
              FROM orders o
-             JOIN customers c ON c.id = o.customer_id
-             WHERE o.id = :id',
+             JOIN customers c ON c.customer_id = o.customer_id
+             LEFT JOIN deliveries d ON d.order_id = o.order_id
+             WHERE o.order_id = :id',
             ['id' => $id]
         );
         if ($row === null) {
@@ -177,32 +191,35 @@ class OrderService
         }
         $order = Order::fromRow($row);
 
-        // 2. Its lines, with each product's name
+        // 2. Its lines, with each item's name
         $lineRows = $this->db->select(
             'SELECT l.*, p.name AS product_name
              FROM order_lines l
-             JOIN products p ON p.id = l.product_id
+             JOIN items p ON p.item_id = l.item_id
              WHERE l.order_id = :id
-             ORDER BY l.id',
+             ORDER BY l.line_id',
             ['id' => $id]
         );
         foreach ($lineRows as $lineRow) {
             $order->lines[] = OrderLine::fromRow($lineRow);
         }
 
-        return $order;    }
+        return $order;
+    }
 
     /**
-     * Saved orders, newest first, with each customer's name and phone, for the order lists.
+     * Saved orders, newest first, with each customer's name and phone and the delivery status, for the order lists.
      * Every order when $customerId is null; only that customer's orders when an id is given.
      * (The lines are loaded by getOrder() when one is opened.)
      * @return Order[]
      */
     public function getAllOrders(?int $customerId = null): array
     {
-        $sql = 'SELECT o.*, c.name AS customer_name, c.phone AS customer_phone
+        $sql = 'SELECT o.*, c.name AS customer_name, c.phone AS customer_phone,
+                       d.delivery_id, d.delivery_date, d.status, d.worker_id, d.comment
                 FROM orders o
-                JOIN customers c ON c.id = o.customer_id';
+                JOIN customers c ON c.customer_id = o.customer_id
+                LEFT JOIN deliveries d ON d.order_id = o.order_id';
         $params = [];
 
         // Only one customer's orders? Add a WHERE, with the id as a placeholder.
@@ -211,7 +228,7 @@ class OrderService
             $params['customer'] = $customerId;
         }
 
-        $sql .= ' ORDER BY o.id DESC';
+        $sql .= ' ORDER BY o.order_id DESC';
         $rows = $this->db->select($sql, $params);
 
         $orders = [];

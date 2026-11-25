@@ -22,11 +22,11 @@ class StockReceiptLine
     public static function fromRow(array $row): StockReceiptLine
     {
         $line = new StockReceiptLine();
-        $line->id = (int) $row['id'];
+        $line->id = (int) $row['line_id'];
         $line->receiptId = (int) $row['receipt_id'];
-        $line->productId = (int) $row['product_id'];
+        $line->productId = (int) $row['item_id'];
         $line->quantityReceived = (int) $row['quantity_received'];
-        $line->unitCost = (float) $row['unit_cost'];
+        $line->unitCost = (float) $row['unit_cost_price'];
         $line->productName = $row['product_name'] ?? null;
         return $line;
     }

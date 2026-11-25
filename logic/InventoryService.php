@@ -15,12 +15,12 @@ class InventoryService
 
     /**
      * 2.1: every product, ordered by name. Features 1 and 4 also use this for their product dropdowns.
-     * SQL: SELECT * FROM products ORDER BY name   -> turn each row into a Product with Product::fromRow()
+     * SQL: SELECT * FROM items ORDER BY name   -> turn each row into a Product with Product::fromRow()
      * @return Product[]
      */
     public function getAllProducts(): array
     {
-        $rows = $this->db->select('SELECT * FROM products ORDER BY name ASC', []);
+        $rows = $this->db->select('SELECT * FROM items ORDER BY name ASC', []);
 
         $products = [];
         foreach ($rows as $row) {
@@ -33,7 +33,7 @@ class InventoryService
     /** One product, or null if not found. Features 1 and 4 use this to check a chosen product exists. */
     public function getProduct(int $id): ?Product
     {
-        $rows = $this->db->select('SELECT * FROM products WHERE id = :id', ['id'=>$id]);
+        $rows = $this->db->select('SELECT * FROM items WHERE item_id = :id', ['id'=>$id]);
         
         if (count($rows) == 0){
             return null;
@@ -44,7 +44,7 @@ class InventoryService
 
     public function getProductIdByName(string $name): ?Product
     {
-         $rows = $this->db->select('SELECT id FROM products WHERE name = :name', ['name'=>$name]);
+         $rows = $this->db->select('SELECT item_id FROM items WHERE name = :name', ['name'=>$name]);
         
         if (count($rows) == 0){
             return null;
@@ -57,7 +57,7 @@ class InventoryService
      * 2.3: adds a new product. Check: name required and not already used,
      * quantity a whole number >= 0, selling price a number >= 0.
      * The values arrive as text from the form, so check them before converting.
-     * SQL: INSERT INTO products (name, quantity, selling_price) VALUES (:name, :quantity, :price)
+     * SQL: INSERT INTO items (name, stock_quantity, selling_price) VALUES (:name, :quantity, :price)
      * @return string[] error messages (empty = saved)
      */
     public function addProduct(string $name, string $quantity, string $sellingPrice): array
@@ -69,7 +69,7 @@ class InventoryService
             return $error;
         }
         
-        $this->db->execute('INSERT INTO products (name, quantity, selling_price)
+        $this->db->execute('INSERT INTO items (name, stock_quantity, selling_price)
         VALUES (:name, :quantity, :sellingPrice)', 
         ['name'=> $name, 'quantity'=>(int) $quantity, 'sellingPrice'=>(float) $sellingPrice]);
 
@@ -78,7 +78,7 @@ class InventoryService
 
     /**
      * 2.2: changes an existing product's name, quantity and selling price (same checks as addProduct).
-     * SQL: UPDATE products SET name = :name, quantity = :quantity, selling_price = :price WHERE id = :id
+     * SQL: UPDATE items SET name = :name, stock_quantity = :quantity, selling_price = :price WHERE item_id = :id
      * @return string[] error messages (empty = saved)
      */
     public function updateProduct(int $id, string $name, string $quantity, string $sellingPrice): array
@@ -90,8 +90,8 @@ class InventoryService
             return $error;
         }
         
-        $this->db->execute('UPDATE products SET name = :name, quantity = :quantity, 
-        selling_price = :sellingPrice WHERE id = :id', 
+        $this->db->execute('UPDATE items SET name = :name, stock_quantity = :quantity, 
+        selling_price = :sellingPrice WHERE item_id = :id', 
         ['name'=> $name, 'quantity'=>(int) $quantity, 'sellingPrice'=>(float) $sellingPrice, 'id'=> $id]
         );
 
@@ -128,7 +128,7 @@ class InventoryService
     // Check if product previously exists.
 
     if (count($errors) == 0) {
-        $results = $this->db->select('SELECT id FROM products WHERE name = :name and id <> :exclude', 
+        $results = $this->db->select('SELECT item_id FROM items WHERE name = :name and item_id <> :exclude', 
         ['name' => $name, 'exclude'=> $excludeId]);
 
         if (count($results) > 0){

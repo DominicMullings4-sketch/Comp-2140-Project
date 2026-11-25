@@ -183,7 +183,7 @@ class StockReceiptUI
 
     /**
      * 1.1 - 1.5: the form was submitted.
-     *   $result = $this->receipts->recordReceipt($supplier, $date, $post['lines'] ?? []);
+     *   $result = $this->receipts->recordReceipt($supplier, $date, $post['lines'] ?? [], AccessControl::currentUserId());
      *   no errors -> set_flash('Stock receipt #' . $result['id'] . ' saved.'); redirect('stock_receipts.php');
      *   errors    -> $this->showReceiptForm($result['errors'], $post);
      */
@@ -193,8 +193,14 @@ class StockReceiptUI
 
         // 1. Hand what was typed to the logic layer, which checks it and saves it.
         //    is_array() guards against a tampered form sending something that isn't a list.
+        //    The signed-in user's id is saved as the person who entered the receipt (stock_receipts.entered_by).
         $lines = is_array($post['lines'] ?? null) ? $post['lines'] : [];
-        $result = $this->receipts->recordReceipt($post['supplier_name'] ?? '', $post['date_received'] ?? '', $lines);
+        $result = $this->receipts->recordReceipt(
+            $post['supplier_name'] ?? '',
+            $post['date_received'] ?? '',
+            $lines,
+            AccessControl::currentUserId()
+        );
 
         // 2. Saved? Show the receipt's unique number (1.5) and reload the page.
         if (count($result['errors']) === 0) {

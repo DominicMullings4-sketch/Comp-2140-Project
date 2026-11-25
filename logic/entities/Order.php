@@ -2,7 +2,9 @@
 
 /**
  * Order: entity class. A customer's order (Feature 4), including its delivery details
- * (Features 5 and 6). It is made up of OrderLine objects (composition on the class diagram).
+ * (Features 5 and 6). The order is stored in the orders table; its delivery details are
+ * stored in the deliveries table (one delivery per order) and are read with a JOIN.
+ * It is made up of OrderLine objects (composition on the class diagram).
  */
 class Order
 {
@@ -16,10 +18,12 @@ class Order
     public ?int $id = null;               // null until saved
     public int $customerId;
     public ?string $createdAt = null;     // 'YYYY-MM-DD HH:MM:SS'
-    public string $deliveryDate;          // 'YYYY-MM-DD'
+    // From the deliveries table (null if the order has no delivery row)
+    public ?int $deliveryId = null;       // deliveries.delivery_id
+    public ?string $deliveryDate = null;  // 'YYYY-MM-DD'
     public string $status = self::STATUS_PENDING;
-    public ?int $bearerId = null;
-    public ?string $deliveryComment = null;
+    public ?int $bearerId = null;         // deliveries.worker_id
+    public ?string $deliveryComment = null;   // deliveries.comment
 
     /** @var OrderLine[] */
     public array $lines = [];
@@ -41,17 +45,24 @@ class Order
         return $total;
     }
 
-    /** Builds an Order (without its lines) from a row of the orders table, plus any joined columns. */
+    /**
+     * Builds an Order (without its lines) from a row of the orders table, plus any joined columns.
+     * The delivery columns (delivery_id, delivery_date, status, worker_id, comment) come from
+     * a JOIN on deliveries; ?? null means they are simply left empty if the query didn't include them.
+     */
     public static function fromRow(array $row): Order
     {
         $order = new Order();
-        $order->id = (int) $row['id'];
+        $order->id = (int) $row['order_id'];
         $order->customerId = (int) $row['customer_id'];
         $order->createdAt = $row['created_at'];
-        $order->deliveryDate = $row['delivery_date'];
-        $order->status = $row['status'];
-        $order->bearerId = $row['bearer_id'] === null ? null : (int) $row['bearer_id'];
-        $order->deliveryComment = $row['delivery_comment'];
+
+        $order->deliveryId = isset($row['delivery_id']) ? (int) $row['delivery_id'] : null;
+        $order->deliveryDate = $row['delivery_date'] ?? null;
+        $order->status = $row['status'] ?? self::STATUS_PENDING;
+        $order->bearerId = isset($row['worker_id']) ? (int) $row['worker_id'] : null;
+        $order->deliveryComment = $row['comment'] ?? null;
+
         $order->customerName = $row['customer_name'] ?? null;
         $order->customerPhone = $row['customer_phone'] ?? null;
         $order->customerAddress = $row['customer_address'] ?? null;

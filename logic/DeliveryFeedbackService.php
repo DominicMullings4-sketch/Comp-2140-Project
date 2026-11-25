@@ -15,9 +15,12 @@ class DeliveryFeedbackService
 
     /**
      * 6.1: the signed-in bearer's deliveries for today.
-     * SQL: SELECT o.*, c.name AS customer_name, c.phone AS customer_phone, c.delivery_address AS customer_address
-     *      FROM orders o JOIN customers c ON c.id = o.customer_id
-     *      WHERE o.bearer_id = :bearer AND o.delivery_date = :today
+     * SQL: SELECT o.*, c.name AS customer_name, c.phone AS customer_phone, c.delivery_address AS customer_address,
+     *             d.delivery_id, d.delivery_date, d.status, d.worker_id, d.comment
+     *      FROM deliveries d
+     *      JOIN orders o ON o.order_id = d.order_id
+     *      JOIN customers c ON c.customer_id = o.customer_id
+     *      WHERE d.worker_id = :bearer AND d.delivery_date = :today
      * @return Order[]
      */
     public function getTodaysDeliveries(int $bearerId): array
@@ -30,7 +33,9 @@ class DeliveryFeedbackService
      * 6.2, 6.3: the bearer marks a delivery 'Delivered' or 'Failed' and adds a comment.
      * Check: the order is assigned to THIS bearer (so nobody can change someone else's delivery),
      * and the status is only 'Delivered' or 'Failed'.
-     * SQL: UPDATE orders SET status = :status, delivery_comment = :comment WHERE id = :id AND bearer_id = :bearer
+     * SQL: UPDATE deliveries
+     *      SET status = :status, comment = :comment, outcome_recorded_at = NOW(), outcome_recorded_by = :bearer
+     *      WHERE order_id = :id AND worker_id = :bearer
      * @return string[] error messages (empty = saved)
      */
     public function updateDelivery(int $orderId, int $bearerId, string $status, string $comment): array
@@ -41,7 +46,8 @@ class DeliveryFeedbackService
 
     /**
      * 6.4, 6.5: every delivery with its status and comment; only one status if a filter is chosen.
-     * Add "WHERE o.status = :status" only when $statusFilter isn't null.
+     * Read FROM deliveries d JOIN orders o ON o.order_id = d.order_id (as in getTodaysDeliveries).
+     * Add "WHERE d.status = :status" only when $statusFilter isn't null.
      * @return Order[]
      */
     public function getDeliveries(?string $statusFilter): array

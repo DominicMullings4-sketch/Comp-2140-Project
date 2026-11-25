@@ -16,7 +16,7 @@ class Customer
     public static function fromRow(array $row): Customer
     {
         $customer = new Customer();
-        $customer->id = (int) $row['id'];
+        $customer->id = (int) $row['customer_id'];
         $customer->name = $row['name'];
         $customer->deliveryAddress = $row['delivery_address'];
         $customer->phone = $row['phone'];

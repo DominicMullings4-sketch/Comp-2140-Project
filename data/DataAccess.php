@@ -10,10 +10,10 @@
  *     $rows = $this->db->select('SELECT * FROM customers ORDER BY name', []);
  *
  *     // Reading one row (null if not found)
- *     $row = $this->db->selectOne('SELECT * FROM customers WHERE id = :id', ['id' => $id]);
+ *     $row = $this->db->selectOne('SELECT * FROM customers WHERE customer_id = :id', ['id' => $id]);
  *
  *     // INSERT or UPDATE
- *     $this->db->execute('UPDATE products SET quantity = :qty WHERE id = :id', ['qty' => 5, 'id' => 3]);
+ *     $this->db->execute('UPDATE items SET stock_quantity = :qty WHERE item_id = :id', ['qty' => 5, 'id' => 3]);
  *     $newId = $this->db->lastInsertId();   // after an INSERT
  *
  * Always use :name placeholders and pass the values in the array.

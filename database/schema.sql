@@ -2,6 +2,10 @@
 -- Track-It database schema (simplified scope, 6 features)
 -- phpMyAdmin -> Import -> choose this file -> Import.
 -- Running it again DELETES all Track-It data and starts fresh.
+--
+-- Table and column names follow the class diagram:
+-- items (not products), and every table's key is named <table>_id
+-- (user_id, item_id, customer_id, order_id, receipt_id, line_id, delivery_id).
 -- =============================================================
 
 DROP DATABASE IF EXISTS track_it;
@@ -10,47 +14,52 @@ USE track_it;
 
 -- -------------------------------------------------------------
 -- users  (pre-loaded accounts; there is no add-user feature)
+-- role is 'OfficeStaff' or 'DeliveryWorker' (User::ROLE_STAFF / User::ROLE_BEARER in PHP)
 -- -------------------------------------------------------------
 CREATE TABLE users (
-    id                 INT AUTO_INCREMENT PRIMARY KEY,
+    user_id            INT AUTO_INCREMENT PRIMARY KEY,
+    name               VARCHAR(100) NOT NULL,
     username           VARCHAR(50)  NOT NULL UNIQUE,
     password_hash      VARCHAR(255) NOT NULL,           -- from PHP password_hash(), never the plain password
-    two_factor_secret  VARCHAR(64)  NULL,               -- set the first time the user signs in with 2FA on
-    role               ENUM('Staff', 'Bearer') NOT NULL
+    two_factor_secret  VARCHAR(100) NULL,               -- set the first time the user signs in with 2FA on
+    role               VARCHAR(20)  NOT NULL
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------------------
--- products  (Feature 2: view / edit / add inventory items)
+-- items  (Feature 2: view / edit / add inventory items)
 -- -------------------------------------------------------------
-CREATE TABLE products (
-    id             INT AUTO_INCREMENT PRIMARY KEY,
-    name           VARCHAR(100) NOT NULL UNIQUE,         -- unique so the dropdowns have no duplicates
-    quantity       INT NOT NULL DEFAULT 0 CHECK (quantity >= 0),
-    selling_price  DECIMAL(10,2) NOT NULL CHECK (selling_price >= 0)
+CREATE TABLE items (
+    item_id            INT AUTO_INCREMENT PRIMARY KEY,
+    name               VARCHAR(100) NOT NULL UNIQUE,         -- unique so the dropdowns have no duplicates
+    stock_quantity     INT NOT NULL DEFAULT 0 CHECK (stock_quantity >= 0),
+    reserved_quantity  INT NOT NULL DEFAULT 0 CHECK (reserved_quantity >= 0),
+    selling_price      DECIMAL(10,2) NOT NULL CHECK (selling_price >= 0)
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------------------
 -- stock_receipts  (Feature 1: receipt header)
--- id = the unique identifier required by 1.5
+-- receipt_id = the unique identifier required by 1.5
 -- -------------------------------------------------------------
 CREATE TABLE stock_receipts (
-    id             INT AUTO_INCREMENT PRIMARY KEY,
+    receipt_id     INT AUTO_INCREMENT PRIMARY KEY,
     supplier_name  VARCHAR(100) NOT NULL,
     date_received  DATE NOT NULL,
-    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    entered_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    entered_by     INT NOT NULL,                         -- the signed-in user who recorded it
+    FOREIGN KEY (entered_by) REFERENCES users(user_id)
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------------------
--- stock_receipt_lines  (the products received on each receipt)
+-- stock_receipt_lines  (the items received on each receipt)
 -- -------------------------------------------------------------
 CREATE TABLE stock_receipt_lines (
-    id                 INT AUTO_INCREMENT PRIMARY KEY,
+    line_id            INT AUTO_INCREMENT PRIMARY KEY,
     receipt_id         INT NOT NULL,
-    product_id         INT NOT NULL,                     -- chosen from the product dropdown
-    quantity_received  INT NOT NULL CHECK (quantity_received >= 1),   -- 1.3
-    unit_cost          DECIMAL(10,2) NOT NULL CHECK (unit_cost >= 0),  -- what the supplier charged per unit
-    FOREIGN KEY (receipt_id) REFERENCES stock_receipts(id) ON DELETE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES products(id)
+    item_id            INT NOT NULL,                     -- chosen from the item dropdown
+    quantity_received  INT NOT NULL CHECK (quantity_received >= 1),        -- 1.3
+    unit_cost_price    DECIMAL(10,2) NOT NULL CHECK (unit_cost_price >= 0), -- what the supplier charged per unit
+    FOREIGN KEY (receipt_id) REFERENCES stock_receipts(receipt_id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id)    REFERENCES items(item_id)
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------------------
@@ -58,7 +67,7 @@ CREATE TABLE stock_receipt_lines (
 -- UNIQUE on phone and email backs up 3.2 at the database level
 -- -------------------------------------------------------------
 CREATE TABLE customers (
-    id                INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id       INT AUTO_INCREMENT PRIMARY KEY,
     name              VARCHAR(100) NOT NULL,
     delivery_address  VARCHAR(255) NOT NULL,
     phone             VARCHAR(20)  NOT NULL UNIQUE,
@@ -66,35 +75,49 @@ CREATE TABLE customers (
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------------------
--- orders  (Feature 4, plus the delivery columns for Features 5 and 6)
--- One delivery per order, so the delivery data lives here.
+-- orders  (Feature 4)
+-- The delivery details are in the deliveries table below.
 -- -------------------------------------------------------------
 CREATE TABLE orders (
-    id                INT AUTO_INCREMENT PRIMARY KEY,
-    customer_id       INT NOT NULL,                      -- 4.6 order linked to customer
-    created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,   -- used for the 10:00 AM rule
-    delivery_date     DATE NOT NULL,                     -- 5.1, 5.3, 5.4
-    status            ENUM('Pending', 'Out for delivery', 'Delivered', 'Failed')
-                      NOT NULL DEFAULT 'Pending',        -- 5.2
-    bearer_id         INT NULL,                          -- 5.5 (empty until a bearer is assigned)
-    delivery_comment  TEXT NULL,                         -- 6.3
-    FOREIGN KEY (customer_id) REFERENCES customers(id),
-    FOREIGN KEY (bearer_id)   REFERENCES users(id)
+    order_id     INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id  INT NOT NULL,                                     -- 4.6 order linked to customer
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,      -- used for the 10:00 AM rule
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------------------
--- order_lines  (the products inside each order)
--- unit_price is copied from products when the order is saved,
+-- order_lines  (the items inside each order)
+-- unit_price is copied from items when the order is saved,
 -- so old invoices don't change when a price is edited (2.2).
 -- -------------------------------------------------------------
 CREATE TABLE order_lines (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    order_id    INT NOT NULL,
-    product_id  INT NOT NULL,
-    quantity    INT NOT NULL CHECK (quantity >= 1),        -- 4.2 (the stock check is done in PHP)
-    unit_price  DECIMAL(10,2) NOT NULL,
-    FOREIGN KEY (order_id)   REFERENCES orders(id) ON DELETE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES products(id)
+    line_id           INT AUTO_INCREMENT PRIMARY KEY,
+    order_id          INT NOT NULL,
+    item_id           INT NOT NULL,
+    quantity_ordered  INT NOT NULL CHECK (quantity_ordered >= 1),    -- 4.2 (the stock check is done in PHP)
+    unit_price        DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id)  REFERENCES items(item_id)
+) ENGINE=InnoDB;
+
+-- -------------------------------------------------------------
+-- deliveries  (Features 5 and 6)
+-- One delivery per order (UNIQUE order_id). Created when the order is saved.
+-- -------------------------------------------------------------
+CREATE TABLE deliveries (
+    delivery_id          INT AUTO_INCREMENT PRIMARY KEY,
+    order_id             INT NOT NULL UNIQUE,
+    worker_id            INT NULL,                       -- 5.5 (empty until a delivery worker is assigned)
+    delivery_date        DATE NOT NULL,                  -- 5.1, 5.3, 5.4
+    status               ENUM('Pending', 'Out for delivery', 'Delivered', 'Failed')
+                         NOT NULL DEFAULT 'Pending',     -- 5.2
+    comment              TEXT NULL,                      -- 6.3
+    assigned_at          DATETIME NULL,                  -- when the worker was assigned (5.5)
+    outcome_recorded_at  DATETIME NULL,                  -- when Delivered / Failed was saved (6.2)
+    outcome_recorded_by  INT NULL,                       -- who saved it
+    FOREIGN KEY (order_id)            REFERENCES orders(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (worker_id)           REFERENCES users(user_id),
+    FOREIGN KEY (outcome_recorded_by) REFERENCES users(user_id)
 ) ENGINE=InnoDB;
 
 -- The invoice (4.4) and grand total (4.3) are not stored:

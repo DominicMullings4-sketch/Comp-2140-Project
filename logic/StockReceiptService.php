@@ -27,14 +27,16 @@ class StockReceiptService
      *        each product is a real product ($this->inventory->getProduct())
      *
      * If all pass, save in ONE transaction (see DataAccess.php):
-     *   1. INSERT INTO stock_receipts (supplier_name, date_received) VALUES (...)
+     *   1. INSERT INTO stock_receipts (supplier_name, date_received, entered_by) VALUES (...)
      *   2. $receiptId = $this->db->lastInsertId();                                  (1.5 the unique identifier)
-     *   3. for each line: INSERT INTO stock_receipt_lines (receipt_id, product_id, quantity_received) ...
-     *   4. for each line: UPDATE products SET quantity = quantity + :qty WHERE id = :product_id   (1.4)
+     *   3. for each line: INSERT INTO stock_receipt_lines (receipt_id, item_id, quantity_received, unit_cost_price) ...
+     *   4. for each line: UPDATE items SET stock_quantity = stock_quantity + :qty WHERE item_id = :item_id   (1.4)
+     *
+     * $enteredBy is the id of the signed-in user recording the receipt (AccessControl::currentUserId()).
      *
      * @return array ['errors' => string[], 'id' => int|null]  (id is the new receipt id when saved)
      */
-    public function recordReceipt(string $supplierName, string $dateReceived, array $lines): array
+    public function recordReceipt(string $supplierName, string $dateReceived, array $lines, int $enteredBy): array
     {
         $errors = [];
         $supplierName = trim($supplierName);
@@ -111,8 +113,8 @@ class StockReceiptService
         try {
             // Step 1: the receipt itself (1.1)
             $this->db->execute(
-                'INSERT INTO stock_receipts (supplier_name, date_received) VALUES (:supplier, :date)',
-                ['supplier' => $supplierName, 'date' => $dateReceived]
+                'INSERT INTO stock_receipts (supplier_name, date_received, entered_by) VALUES (:supplier, :date, :user)',
+                ['supplier' => $supplierName, 'date' => $dateReceived, 'user' => $enteredBy]
             );
 
             // Step 2: the id MySQL just gave it. This is the unique identifier (1.5).
@@ -121,7 +123,7 @@ class StockReceiptService
             foreach ($cleanLines as $line) {
                 // Step 3: one row per product received
                 $this->db->execute(
-                    'INSERT INTO stock_receipt_lines (receipt_id, product_id, quantity_received, unit_cost)
+                    'INSERT INTO stock_receipt_lines (receipt_id, item_id, quantity_received, unit_cost_price)
                      VALUES (:receipt, :product, :quantity, :cost)',
                     [
                         'receipt' => $receiptId,
@@ -133,7 +135,7 @@ class StockReceiptService
 
                 // Step 4: increase that product's stock (1.4)
                 $this->db->execute(
-                    'UPDATE products SET quantity = quantity + :quantity WHERE id = :product',
+                    'UPDATE items SET stock_quantity = stock_quantity + :quantity WHERE item_id = :product',
                     ['quantity' => $line['quantity'], 'product' => $line['product_id']]
                 );
             }
@@ -154,7 +156,7 @@ class StockReceiptService
      */
     public function getAllReceipts(): array
     {
-        $rows = $this->db->select('SELECT * FROM stock_receipts ORDER BY id DESC', []);
+        $rows = $this->db->select('SELECT * FROM stock_receipts ORDER BY receipt_id DESC', []);
 
         $receipts = [];
         foreach ($rows as $row) {
@@ -170,20 +172,20 @@ class StockReceiptService
     public function getReceipt(int $id): ?StockReceipt
     {
         // 1. The receipt itself
-        $row = $this->db->selectOne('SELECT * FROM stock_receipts WHERE id = :id', ['id' => $id]);
+        $row = $this->db->selectOne('SELECT * FROM stock_receipts WHERE receipt_id = :id', ['id' => $id]);
         if ($row === null) {
             return null;
         }
         $receipt = StockReceipt::fromRow($row);
 
-        // 2. Its lines. The JOIN adds each product's name, renamed to product_name
+        // 2. Its lines. The JOIN adds each item's name, renamed to product_name
         //    so StockReceiptLine::fromRow() picks it up.
         $lineRows = $this->db->select(
             'SELECT l.*, p.name AS product_name
              FROM stock_receipt_lines l
-             JOIN products p ON p.id = l.product_id
+             JOIN items p ON p.item_id = l.item_id
              WHERE l.receipt_id = :id
-             ORDER BY l.id',
+             ORDER BY l.line_id',
             ['id' => $id]
         );
         foreach ($lineRows as $lineRow) {

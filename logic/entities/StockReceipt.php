@@ -9,7 +9,8 @@ class StockReceipt
     public ?int $id = null;        // the unique identifier (1.5); null until saved
     public string $supplierName;
     public string $dateReceived;   // 'YYYY-MM-DD'
-    public ?string $createdAt = null;
+    public ?string $createdAt = null;   // stock_receipts.entered_at
+    public ?int $enteredBy = null;      // the user who recorded it (stock_receipts.entered_by)
 
     /** @var StockReceiptLine[] */
     public array $lines = [];
@@ -28,10 +29,11 @@ class StockReceipt
     public static function fromRow(array $row): StockReceipt
     {
         $receipt = new StockReceipt();
-        $receipt->id = (int) $row['id'];
+        $receipt->id = (int) $row['receipt_id'];
         $receipt->supplierName = $row['supplier_name'];
         $receipt->dateReceived = $row['date_received'];
-        $receipt->createdAt = $row['created_at'];
+        $receipt->createdAt = $row['entered_at'];
+        $receipt->enteredBy = (int) $row['entered_by'];
         return $receipt;
     }
 }

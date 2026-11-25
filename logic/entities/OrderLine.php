@@ -22,10 +22,10 @@ class OrderLine
     public static function fromRow(array $row): OrderLine
     {
         $line = new OrderLine();
-        $line->id = (int) $row['id'];
+        $line->id = (int) $row['line_id'];
         $line->orderId = (int) $row['order_id'];
-        $line->productId = (int) $row['product_id'];
-        $line->quantity = (int) $row['quantity'];
+        $line->productId = (int) $row['item_id'];
+        $line->quantity = (int) $row['quantity_ordered'];
         $line->unitPrice = (float) $row['unit_price'];
         $line->productName = $row['product_name'] ?? null;
         return $line;
