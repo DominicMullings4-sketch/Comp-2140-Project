@@ -18,7 +18,7 @@ class OrderLine
         return $this->quantity * $this->unitPrice;
     }
 
-    /** Builds an OrderLine from a row of the order_lines table. */
+    // Builds an OrderLine from a row of the order_lines table. 
     public static function fromRow(array $row): OrderLine
     {
         $line = new OrderLine();

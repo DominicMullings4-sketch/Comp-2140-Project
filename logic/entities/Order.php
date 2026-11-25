@@ -25,17 +25,17 @@ class Order
     public ?int $bearerId = null;         // deliveries.worker_id
     public ?string $deliveryComment = null;   // deliveries.comment
 
-    /** @var OrderLine[] */
+    /** OrderLine[] */
     public array $lines = [];
 
-    // For display only (filled when read with a JOIN on customers / users)
+    // For display 
     public ?string $customerName = null;
     public ?string $customerPhone = null;
     public ?string $customerAddress = null;
     public ?string $customerEmail = null;
     public ?string $bearerUsername = null;
 
-    /** Grand total (4.3): the sum of every line's total. */
+    // Grand total (4.3): the sum of every line's total.
     public function total(): float
     {
         $total = 0.0;

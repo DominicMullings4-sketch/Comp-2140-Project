@@ -15,7 +15,7 @@ class StockReceipt
     /** @var StockReceiptLine[] */
     public array $lines = [];
 
-    /** The receipt's total cost: the sum of every line's cost. */
+    // The receipt's total cost: the sum of every line's cost.
     public function total(): float
     {
         $total = 0.0;

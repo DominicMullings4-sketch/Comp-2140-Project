@@ -16,14 +16,20 @@ class UserService
 
     public function findByUsername(string $username): ?User
     {
-        $row = $this->db->selectOne('SELECT * FROM users WHERE username = :username', ['username' => $username]);
-        return $row === null ? null : User::fromRow($row);
+        $rows = $this->db->select('SELECT * FROM users WHERE username = :username', ['username' => $username]);
+        if (count($rows) === 0) {
+            return null;   // no user with that username
+        }
+        return User::fromRow($rows[0]);   // the first (and only) row
     }
 
     public function getUser(int $id): ?User
     {
-        $row = $this->db->selectOne('SELECT * FROM users WHERE user_id = :id', ['id' => $id]);
-        return $row === null ? null : User::fromRow($row);
+        $rows = $this->db->select('SELECT * FROM users WHERE user_id = :id', ['id' => $id]);
+        if (count($rows) === 0) {
+            return null;   // no user with that id
+        }
+        return User::fromRow($rows[0]);   // the first (and only) row
     }
 
     /** @return User[] every bearer, for the "assign a bearer" dropdown (5.5) */

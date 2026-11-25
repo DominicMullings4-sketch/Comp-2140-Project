@@ -172,11 +172,11 @@ class StockReceiptService
     public function getReceipt(int $id): ?StockReceipt
     {
         // 1. The receipt itself
-        $row = $this->db->selectOne('SELECT * FROM stock_receipts WHERE receipt_id = :id', ['id' => $id]);
-        if ($row === null) {
-            return null;
+        $rows = $this->db->select('SELECT * FROM stock_receipts WHERE receipt_id = :id', ['id' => $id]);
+        if (count($rows) === 0) {
+            return null;   // no receipt with that id
         }
-        $receipt = StockReceipt::fromRow($row);
+        $receipt = StockReceipt::fromRow($rows[0]);   // the first (and only) row
 
         // 2. Its lines. The JOIN adds each item's name, renamed to product_name
         //    so StockReceiptLine::fromRow() picks it up.

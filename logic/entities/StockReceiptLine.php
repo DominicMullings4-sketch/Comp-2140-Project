@@ -12,7 +12,7 @@ class StockReceiptLine
     public float $unitCost;
     public ?string $productName = null;   // for display only (filled when read with a JOIN)
 
-    /** This line's cost: quantity received x unit cost. */
+    // This line's cost: quantity received x unit cost.
     public function lineTotal(): float
     {
         return $this->quantityReceived * $this->unitCost;

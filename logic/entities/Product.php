@@ -8,7 +8,7 @@ class Product
     public ?int $id = null;        // null until the product is saved
     public string $name;
     public int $quantity;          // items.stock_quantity
-    public int $reservedQuantity = 0;   // items.reserved_quantity (not used by any feature yet)
+    public int $reservedQuantity = 0;   // feature rolled back
     public float $sellingPrice;
 
     /** Builds a Product from a row of the items table. */

@@ -2,7 +2,7 @@
 
 /**
  * Customer: entity class. A customer record (Feature 3).
- * Customers do not sign in; staff record them.
+ * Customers do not sign in; staff records them.
  */
 class Customer
 {
@@ -12,7 +12,7 @@ class Customer
     public string $phone;
     public string $email;
 
-    /** Builds a Customer from a row of the customers table. */
+    /** Builds a Customer object from a row of the customers table. */
     public static function fromRow(array $row): Customer
     {
         $customer = new Customer();

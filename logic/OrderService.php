@@ -176,7 +176,7 @@ class OrderService
     {
         // 1. The order, with its customer's details (the JOIN adds them, renamed so Order::fromRow() picks them up)
         //    and its delivery details (LEFT JOIN: the order still shows even if it has no delivery row)
-        $row = $this->db->selectOne(
+        $rows = $this->db->select(
             'SELECT o.*, c.name AS customer_name, c.phone AS customer_phone,
                     c.delivery_address AS customer_address, c.email AS customer_email,
                     d.delivery_id, d.delivery_date, d.status, d.worker_id, d.comment
@@ -186,10 +186,10 @@ class OrderService
              WHERE o.order_id = :id',
             ['id' => $id]
         );
-        if ($row === null) {
-            return null;
+        if (count($rows) === 0) {
+            return null;   // no order with that id
         }
-        $order = Order::fromRow($row);
+        $order = Order::fromRow($rows[0]);   // the first (and only) row
 
         // 2. Its lines, with each item's name
         $lineRows = $this->db->select(

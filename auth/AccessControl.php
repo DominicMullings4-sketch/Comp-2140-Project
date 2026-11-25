@@ -1,12 +1,9 @@
 <?php
 
 /**
- * AccessControl: Authentication & Authorization layer. The single gate every page goes through.
- * Already built (foundation).
- *
- * The first line of logic on EVERY page in ui/ (except login) is one of:
- *     AccessControl::requireRole(User::ROLE_STAFF);
- *     AccessControl::requireRole(User::ROLE_BEARER);
+ * AccessControl: Authentication & Authorization layer. 
+ * Checks to ensure that user is permitted to view webpage. 
+ * 
  * Not signed in -> sent to the sign-in page. Wrong role -> sent to the "Access denied" page.
  */
 class AccessControl
@@ -16,7 +13,7 @@ class AccessControl
         return isset($_SESSION['user_id']);
     }
 
-    /** The signed-in user's id (null if nobody is signed in). */
+    // The signed-in user's id (null if nobody is signed in). */
     public static function currentUserId(): ?int
     {
         return $_SESSION['user_id'] ?? null;
@@ -27,7 +24,7 @@ class AccessControl
         return $_SESSION['username'] ?? null;
     }
 
-    /** User::ROLE_STAFF, User::ROLE_BEARER, or null if nobody is signed in. */
+    // User::ROLE_STAFF, User::ROLE_BEARER, or null if nobody is signed in.
     public static function currentRole(): ?string
     {
         return $_SESSION['role'] ?? null;
@@ -48,7 +45,7 @@ class AccessControl
         }
     }
 
-    /** The page each role starts on after signing in. */
+    //The page each role starts on after signing in. 
     public static function homePageFor(string $role): string
     {
         if ($role === User::ROLE_BEARER) {

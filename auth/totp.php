@@ -1,7 +1,6 @@
 <?php
 // TOTP: the 6-digit codes that authenticator apps show (the standard is called RFC 6238).
-// These are plain helper functions, not classes, so they are not on the class diagram.
-// Auth uses them. You don't need to change anything in this file.
+// TOTP was imported as is, no action or implementation required. 
 
 // The 32 characters an authenticator secret is written with (called "base-32").
 const TOTP_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';

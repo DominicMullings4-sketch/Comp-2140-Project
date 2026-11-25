@@ -2,10 +2,10 @@
 
 /**
  * CustomerService: Application Logic layer. Business rules AND SQL for Feature 3 (Storing Customer Information).
- * WORKED EXAMPLE: fully built. Copy this style for your own service.
  *
  * The pattern: the page hands over what the user typed, the service checks the rules,
  * and only if everything passes does it save (through DataAccess).
+ * Methods in this class are responible for returning errors. 
  * Methods that save return a list of error messages: an EMPTY list means it worked.
  */
 class CustomerService
@@ -31,8 +31,11 @@ class CustomerService
 
     public function getCustomer(int $id): ?Customer
     {
-        $row = $this->db->selectOne('SELECT * FROM customers WHERE customer_id = :id', ['id' => $id]);
-        return $row === null ? null : Customer::fromRow($row);
+        $rows = $this->db->select('SELECT * FROM customers WHERE customer_id = :id', ['id' => $id]);
+        if (count($rows) === 0) {
+            return null;   // no customer with that id
+        }
+        return Customer::fromRow($rows[0]);   // the first (and only) row
     }
 
     /**
@@ -112,19 +115,19 @@ class CustomerService
 
         // No duplicates (3.2). Only checked once the format is right.
         if (count($errors) === 0) {
-            $samePhone = $this->db->selectOne(
+            $samePhone = $this->db->select(
                 'SELECT customer_id FROM customers WHERE phone = :phone AND customer_id <> :exclude',
                 ['phone' => $phone, 'exclude' => $excludeId]
             );
-            if ($samePhone !== null) {
+            if (count($samePhone) > 0) {
                 $errors[] = 'Another customer already has this phone number.';
             }
 
-            $sameEmail = $this->db->selectOne(
+            $sameEmail = $this->db->select(
                 'SELECT customer_id FROM customers WHERE email = :email AND customer_id <> :exclude',
                 ['email' => $email, 'exclude' => $excludeId]
             );
-            if ($sameEmail !== null) {
+            if (count($sameEmail) > 0) {
                 $errors[] = 'Another customer already has this email address.';
             }
         }

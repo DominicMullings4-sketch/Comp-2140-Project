@@ -2,19 +2,9 @@
 
 /**
  * DataAccess: Data Management layer. The ONE class that talks to MySQL.
- * Every service creates one in its constructor and runs its SQL through it:
+ * Every service creates an instance in its constructor and runs its SQL queries through it:
  *
  *     $this->db = new DataAccess();
- *
- *     // Reading many rows
- *     $rows = $this->db->select('SELECT * FROM customers ORDER BY name', []);
- *
- *     // Reading one row (null if not found)
- *     $row = $this->db->selectOne('SELECT * FROM customers WHERE customer_id = :id', ['id' => $id]);
- *
- *     // INSERT or UPDATE
- *     $this->db->execute('UPDATE items SET stock_quantity = :qty WHERE item_id = :id', ['qty' => 5, 'id' => 3]);
- *     $newId = $this->db->lastInsertId();   // after an INSERT
  *
  * Always use :name placeholders and pass the values in the array.
  * Never paste form input into the SQL text (SQL injection).
@@ -38,29 +28,21 @@ class DataAccess
     public function __construct()
     {
         if (self::$connection === null) {
-            $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4';
-            self::$connection = new PDO($dsn, DB_USER, DB_PASSWORD, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,        // a failed SQL statement shows a clear error
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,   // rows come back as ['column' => value]
+            $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4'; // Uses config file to input variables needed to establish connection. 
+            self::$connection = new PDO($dsn, DB_USER, DB_PASSWORD, 
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,        
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,   
             ]);
         }
     }
 
-    /** Runs a SELECT and returns every row (an empty list if none). */
+    /** Runs a SELECT query and returns every row (an empty list if none). */
     public function select(string $sql, array $params): array
     {
         $statement = self::$connection->prepare($sql);
         $statement->execute($params);
         return $statement->fetchAll();
-    }
-
-    /** Runs a SELECT and returns the first row, or null if there isn't one. */
-    public function selectOne(string $sql, array $params): ?array
-    {
-        $statement = self::$connection->prepare($sql);
-        $statement->execute($params);
-        $row = $statement->fetch();
-        return $row === false ? null : $row;
     }
 
     /** Runs an INSERT or UPDATE and returns how many rows changed. */
