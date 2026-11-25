@@ -39,8 +39,15 @@ class Order
      */
     public function addLine(Item $item, int $quantity): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('Order::addLine() is not built yet.');
+        if ($quantity <= 0) {
+        throw new Exception('Quantity must be greater than zero.');
+        }
+
+        if ($quantity > $item->getAvailableQuantity()) {
+            throw new Exception('Quantity exceeds the available stock.');
+        }
+
+        $this->lines[] = new OrderLine($item, $quantity);
     }
 
     /**
@@ -69,8 +76,11 @@ class Order
      */
     public function confirmOrder(): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('Order::confirmOrder() is not built yet.');
+        if ($this->orderStatus !== OrderStatus::PendingConfirmation) {
+        throw new Exception('Only pending orders can be confirmed.');
+        }
+
+        $this->orderStatus = OrderStatus::OrderConfirmed;
     }
 
     /**
@@ -80,8 +90,23 @@ class Order
      */
     public function cancelOrder(): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('Order::cancelOrder() is not built yet.');
+        $statusAllowsCancellation = in_array(
+            $this->orderStatus,
+            [OrderStatus::PendingConfirmation, OrderStatus::OrderConfirmed],
+            true
+        );
+
+        $deliveryAllowsCancellation = in_array(
+            $this->getDeliveryStatus(),
+            [DeliveryStatus::NotScheduled, DeliveryStatus::Failed],
+            true
+        );
+
+        if (!$statusAllowsCancellation || !$deliveryAllowsCancellation) {
+            throw new Exception('This order cannot be cancelled.');
+        }
+
+        $this->orderStatus = OrderStatus::Cancelled;
     }
 
     /**
@@ -154,8 +179,19 @@ class Order
      */
     public function assignNewDelivery(User $worker, string $deliveryDate): Delivery
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('Order::assignNewDelivery() is not built yet.');
+        if ($this->orderStatus !== OrderStatus::OrderConfirmed) {
+        throw new Exception('Only confirmed orders can be assigned for delivery.');
+        }
+
+        if (!in_array(
+            $this->getDeliveryStatus(),
+            [DeliveryStatus::NotScheduled, DeliveryStatus::Failed],
+            true
+        )) {
+            throw new Exception('This order cannot be assigned for delivery.');
+        }
+
+        return new Delivery($this, $worker, $deliveryDate);
     }
 
     /**
