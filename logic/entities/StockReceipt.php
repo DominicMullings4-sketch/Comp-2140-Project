@@ -14,6 +14,16 @@ class StockReceipt
     /** @var StockReceiptLine[] */
     public array $lines = [];
 
+    /** The receipt's total cost: the sum of every line's cost. */
+    public function total(): float
+    {
+        $total = 0.0;
+        foreach ($this->lines as $line) {
+            $total += $line->lineTotal();
+        }
+        return $total;
+    }
+
     /** Builds a StockReceipt (without its lines) from a row of the stock_receipts table. */
     public static function fromRow(array $row): StockReceipt
     {

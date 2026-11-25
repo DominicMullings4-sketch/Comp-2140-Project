@@ -146,4 +146,50 @@ class StockReceiptService
 
         return ['errors' => [], 'id' => $receiptId];
     }
+
+    /**
+     * Every stock receipt that has been saved, newest first, for the "Submitted receipts" list.
+     * (Header only: id, supplier, date. The lines are loaded by getReceipt().)
+     * @return StockReceipt[]
+     */
+    public function getAllReceipts(): array
+    {
+        $rows = $this->db->select('SELECT * FROM stock_receipts ORDER BY id DESC', []);
+
+        $receipts = [];
+        foreach ($rows as $row) {
+            $receipts[] = StockReceipt::fromRow($row);
+        }
+        return $receipts;
+    }
+
+    /**
+     * One stock receipt WITH its lines (and each line's product name), for the breakdown page.
+     * Returns null if there is no receipt with that id.
+     */
+    public function getReceipt(int $id): ?StockReceipt
+    {
+        // 1. The receipt itself
+        $row = $this->db->selectOne('SELECT * FROM stock_receipts WHERE id = :id', ['id' => $id]);
+        if ($row === null) {
+            return null;
+        }
+        $receipt = StockReceipt::fromRow($row);
+
+        // 2. Its lines. The JOIN adds each product's name, renamed to product_name
+        //    so StockReceiptLine::fromRow() picks it up.
+        $lineRows = $this->db->select(
+            'SELECT l.*, p.name AS product_name
+             FROM stock_receipt_lines l
+             JOIN products p ON p.id = l.product_id
+             WHERE l.receipt_id = :id
+             ORDER BY l.id',
+            ['id' => $id]
+        );
+        foreach ($lineRows as $lineRow) {
+            $receipt->lines[] = StockReceiptLine::fromRow($lineRow);
+        }
+
+        return $receipt;
+    }
 }

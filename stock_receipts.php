@@ -4,8 +4,11 @@
 require __DIR__ . '/bootstrap.php';
 
 $ui = new StockReceiptUI();
+$action = $_GET['action'] ?? 'new';   // the ?action= part of the address
 
-if (is_post()) {
+if ($action === 'view') {
+    $ui->showReceipt((int) ($_GET['id'] ?? 0));   // stock_receipts.php?action=view&id=3
+} elseif (is_post()) {
     $ui->submitReceipt($_POST);
 } else {
     $ui->showReceiptForm();

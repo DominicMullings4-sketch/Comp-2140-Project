@@ -4,8 +4,9 @@
  * StockReceiptUI: User Interface layer. The screens for Feature 1 (Add Stock Receipts).
  * Owner: Feature 1. Copy the pattern from CustomerUI.php.
  *
- * stock_receipts.php     -> showReceiptForm()
- * form submitted (POST)  -> submitReceipt()
+ * stock_receipts.php                  -> showReceiptForm(): the form + the list of submitted receipts
+ * form submitted (POST)               -> submitReceipt()
+ * stock_receipts.php?action=view&id=3 -> showReceipt(3): the breakdown of receipt 3 with its lines
  */
 class StockReceiptUI
 {
@@ -29,6 +30,9 @@ class StockReceiptUI
         AccessControl::requireRole(User::ROLE_STAFF);
         
         $products = $this->inventory->getAllProducts();
+
+        // Every receipt saved so far, for the "Submitted receipts" list below the form
+        $receipts = $this->receipts->getAllReceipts();
 
         if ($form === null) {
             $form = ['supplier_name' => '', 'date_received' => date('Y-m-d'), 'lines' => []];
@@ -96,6 +100,82 @@ class StockReceiptUI
                     <button type="submit">Save stock receipt</button>
                 </form>
             <?php endif; ?>
+        </section>
+
+        <section class="card">
+            <h2>Submitted receipts</h2>
+            <?php if (count($receipts) === 0): ?>
+                <p>No stock receipts yet.</p>
+            <?php else: ?>
+                <table>
+                    <tr>
+                        <th>Receipt #</th>
+                        <th>Date received</th>
+                        <th>Supplier</th>
+                    </tr>
+                    <?php foreach ($receipts as $r): ?>
+                        <tr>
+                            <td><a href="stock_receipts.php?action=view&amp;id=<?= h($r->id) ?>">#<?= h($r->id) ?></a></td>
+                            <td><?= h($r->dateReceived) ?></td>
+                            <td><?= h($r->supplierName) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
+            <?php endif; ?>
+        </section>
+        <?php
+        render_footer();
+    }
+
+    /**
+     * The breakdown of one stock receipt: its details and every line
+     * (product, quantity received, unit cost, line cost), plus the total cost.
+     */
+    public function showReceipt(int $receiptId): void
+    {
+        AccessControl::requireRole(User::ROLE_STAFF);
+
+        $receipt = $this->receipts->getReceipt($receiptId);
+        if ($receipt === null) {
+            set_flash('That stock receipt was not found.', 'error');
+            redirect('stock_receipts.php');
+        }
+
+        render_header('Stock Receipt #' . $receipt->id);
+        ?>
+        <p><a href="stock_receipts.php">&larr; Back to stock receipts</a></p>
+        <h1>Stock Receipt #<?= h($receipt->id) ?></h1>
+
+        <section class="card">
+            <table>
+                <tr><th>Supplier</th><td><?= h($receipt->supplierName) ?></td></tr>
+                <tr><th>Date received</th><td><?= h($receipt->dateReceived) ?></td></tr>
+                <tr><th>Recorded at</th><td><?= h($receipt->createdAt) ?></td></tr>
+            </table>
+        </section>
+
+        <section class="card">
+            <h2>Products received</h2>
+            <table>
+                <tr>
+                    <th>Product</th>
+                    <th class="number">Quantity</th>
+                    <th class="number">Unit cost</th>
+                    <th class="number">Line cost</th>
+                </tr>
+                <?php foreach ($receipt->lines as $line): ?>
+                    <tr>
+                        <td><?= h($line->productName) ?></td>
+                        <td class="number"><?= h($line->quantityReceived) ?></td>
+                        <td class="number"><?= h(money($line->unitCost)) ?></td>
+                        <td class="number"><?= h(money($line->lineTotal())) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                <tr>
+                    <th colspan="3">Total cost</th>
+                    <th class="number"><?= h(money($receipt->total())) ?></th>
+                </tr>
+            </table>
         </section>
         <?php
         render_footer();
