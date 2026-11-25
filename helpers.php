@@ -35,6 +35,18 @@ function set_flash(string $message, string $type = 'success'): void
     $_SESSION['flash'] = ['message' => $message, 'type' => $type];
 }
 
+// Prints the top of every page: the title, the menu for the user's role and any one-time message.
+function render_header(string $pageTitle): void
+{
+    require __DIR__ . '/ui/partials/header.php';
+}
+
+// Prints the bottom of every page.
+function render_footer(): void
+{
+    require __DIR__ . '/ui/partials/footer.php';
+}
+
 // Reads the one-time message and removes it, so it only shows once. header.php calls this.
 function take_flash(): ?array
 {

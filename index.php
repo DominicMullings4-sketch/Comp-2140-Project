@@ -4,6 +4,6 @@
 require __DIR__ . '/bootstrap.php';
 
 if (!AccessControl::isLoggedIn()) {
-    redirect('ui/login.php');
+    redirect('login.php');
 }
-redirect('ui/' . AccessControl::homePageFor(AccessControl::currentRole()));
+redirect(AccessControl::homePageFor(AccessControl::currentRole()));

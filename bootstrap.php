@@ -1,5 +1,5 @@
 <?php
-// Every page loads this file first:   require __DIR__ . '/../bootstrap.php';
+// Every page loads this file first:   require __DIR__ . '/bootstrap.php';
 // It does four things, in this order:
 //   1. loads your settings (config/config.php)
 //   2. loads the helper functions
@@ -48,6 +48,15 @@ require_once __DIR__ . '/logic/DeliveryFeedbackService.php';
 require_once __DIR__ . '/auth/totp.php';
 require_once __DIR__ . '/auth/Auth.php';
 require_once __DIR__ . '/auth/AccessControl.php';
+
+// User Interface layer (one UI class per feature; the pages in the main folder call their methods)
+require_once __DIR__ . '/ui/LoginUI.php';
+require_once __DIR__ . '/ui/StockReceiptUI.php';
+require_once __DIR__ . '/ui/InventoryUI.php';
+require_once __DIR__ . '/ui/CustomerUI.php';
+require_once __DIR__ . '/ui/OrderUI.php';
+require_once __DIR__ . '/ui/DeliveryUI.php';
+require_once __DIR__ . '/ui/DeliveryFeedbackUI.php';
 
 // ---------------------------------------------------------------- 4. Session
 session_start();
