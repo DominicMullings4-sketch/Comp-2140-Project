@@ -9,6 +9,7 @@ class StockReceiptLine
     public ?int $receiptId = null;
     public int $productId;
     public int $quantityReceived;
+    public float $unitCost;
     public ?string $productName = null;   // for display only (filled when read with a JOIN)
 
     /** Builds a StockReceiptLine from a row of the stock_receipt_lines table. */
@@ -19,6 +20,7 @@ class StockReceiptLine
         $line->receiptId = (int) $row['receipt_id'];
         $line->productId = (int) $row['product_id'];
         $line->quantityReceived = (int) $row['quantity_received'];
+        $line->unitCost = (float) $row['unit_cost'];
         $line->productName = $row['product_name'] ?? null;
         return $line;
     }

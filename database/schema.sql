@@ -48,6 +48,7 @@ CREATE TABLE stock_receipt_lines (
     receipt_id         INT NOT NULL,
     product_id         INT NOT NULL,                     -- chosen from the product dropdown
     quantity_received  INT NOT NULL CHECK (quantity_received >= 1),   -- 1.3
+    unit_cost          DECIMAL(10,2) NOT NULL CHECK (unit_cost >= 0),  -- what the supplier charged per unit
     FOREIGN KEY (receipt_id) REFERENCES stock_receipts(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)
 ) ENGINE=InnoDB;
