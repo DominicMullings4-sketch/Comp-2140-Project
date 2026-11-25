@@ -46,8 +46,20 @@ class DeliveryService
      */
     public function getOrdersForDate(string $date): array
     {
-        // TODO (Feature 5)
-        throw new Exception('DeliveryService::getOrdersForDate() is not built yet (F5).');
+        $rows = $this->db->select('SELECT o.*, c.name AS customer_name, u.username AS bearer_username,
+                   d.delivery_id, d.delivery_date, d.status, d.worker_id, d.comment
+            FROM deliveries d
+            JOIN orders o ON o.order_id = d.order_id
+            JOIN customers c ON c.customer_id = o.customer_id
+            LEFT JOIN users u ON u.user_id = d.worker_id
+            WHERE d.delivery_date = :date
+            ORDER BY o.order_id', ['date' => $date]);
+
+        $orders = [];
+        foreach ($rows as $row) {
+            $orders[] = Order::fromRow($row);
+        }
+        return $orders;
     }
 
     /** Every bearer, for the "assign a bearer" dropdown (5.5). Already built. @return User[] */
@@ -64,8 +76,25 @@ class DeliveryService
      */
     public function assignBearer(int $orderId, int $bearerId): array
     {
-        // TODO (Feature 5)
-        throw new Exception('DeliveryService::assignBearer() is not built yet (F5: 5.5).');
+        $errors = [];
+
+        $bearer = $this->users->getUser($bearerId);                       // blank 1
+        if ($bearer === null || $bearer->role !== User::ROLE_BEARER) {            // blank 2
+            $errors[] = 'Please choose a valid delivery bearer.';
+        }
+
+        // If any check failed, stop here. Nothing is saved.
+        if (count($errors) > 0) {                                                  // blank 3
+            return $errors;
+        }
+
+        // Save the assignment. The status stays 'Pending' until the delivery date (5.6).
+        $this->db->execute(
+            'UPDATE deliveries SET worker_id = :bearer, assigned_at = NOW() WHERE order_id = :id',
+            ['bearer' => $bearerId, 'id' => $orderId]                          // blanks 4 and 5
+        );
+
+        return $errors;   // empty list = saved
     }
 
     /**
@@ -76,7 +105,12 @@ class DeliveryService
      */
     public function refreshStatuses(): void
     {
-        // TODO (Feature 5)
-        throw new Exception('DeliveryService::refreshStatuses() is not built yet (F5: 5.6).');
+        // Only assigned (worker_id set), still-Pending orders whose delivery date has arrived.
+        // The status = Pending check means running this again does nothing (safe on every page load).
+        $this->db->execute(
+            'UPDATE deliveries SET status = :outForDelivery
+             WHERE worker_id IS NOT NULL AND status = :pending AND delivery_date <= :today',
+            ['outForDelivery' => Order::STATUS_OUT_FOR_DELIVERY,'pending'=> Order::STATUS_PENDING, 'today'=> date('Y-m-d') ]
+        );
     }
 }
