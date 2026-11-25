@@ -33,6 +33,7 @@ require __DIR__ . '/entities/UserStatus.php';
 // Entity classes
 require __DIR__ . '/entities/Customer.php';
 require __DIR__ . '/entities/Delivery.php';
+require __DIR__ . '/entities/DeliveryNote.php';
 require __DIR__ . '/entities/Invoice.php';
 require __DIR__ . '/entities/Item.php';
 require __DIR__ . '/entities/Order.php';
