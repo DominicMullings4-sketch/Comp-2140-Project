@@ -27,8 +27,7 @@ class OrderMgmt
      */
     public function createOrder(Customer $customer, ?OrderSource $orderSource = null): Order
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::createOrder() is not built yet.');
+        return new Order($customer, $orderSource);
     }
 
     /**
