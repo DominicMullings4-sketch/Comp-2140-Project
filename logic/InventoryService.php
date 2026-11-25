@@ -20,15 +20,37 @@ class InventoryService
      */
     public function getAllProducts(): array
     {
-        // TODO (Feature 2)
-        throw new Exception('InventoryService::getAllProducts() is not built yet (F2: 2.1).');
+        $rows = $this->db->select('SELECT * FROM products ORDER BY name ASC', []);
+
+        $products = [];
+        foreach ($rows as $row) {
+            $products[] = Product::fromRow($row);
+        }
+
+        return $products;
     }
 
     /** One product, or null if not found. Features 1 and 4 use this to check a chosen product exists. */
     public function getProduct(int $id): ?Product
     {
-        // TODO (Feature 2)
-        throw new Exception('InventoryService::getProduct() is not built yet (F2).');
+        $rows = $this->db->select('SELECT * FROM products WHERE id = :id', ['id'=>$id]);
+        
+        if (count($rows) == 0){
+            return null;
+        } else {
+            return Product::fromRow($rows[0]);
+        }
+    }
+
+    public function getProductIdByName(string $name): ?Product
+    {
+         $rows = $this->db->select('SELECT id FROM products WHERE name = :name', ['name'=>$name]);
+        
+        if (count($rows) == 0){
+            return null;
+        } else {
+            return $rows[0];
+        }
     }
 
     /**
@@ -41,7 +63,17 @@ class InventoryService
     public function addProduct(string $name, string $quantity, string $sellingPrice): array
     {
         // TODO (Feature 2)
-        throw new Exception('InventoryService::addProduct() is not built yet (F2: 2.3).');
+        $error = $this->checkDetails($name, $quantity, $sellingPrice, 0);
+
+        if (count($error)){
+            return $error;
+        }
+        
+        $this->db->execute('INSERT INTO products (name, quantity, selling_price)
+        VALUES (:name, :quantity, :sellingPrice)', 
+        ['name'=> $name, 'quantity'=>(int) $quantity, 'sellingPrice'=>(float) $sellingPrice]);
+
+        return [];
     }
 
     /**
@@ -52,6 +84,58 @@ class InventoryService
     public function updateProduct(int $id, string $name, string $quantity, string $sellingPrice): array
     {
         // TODO (Feature 2)
-        throw new Exception('InventoryService::updateProduct() is not built yet (F2: 2.2).');
+        $error = $this->checkDetails($name, $quantity, $sellingPrice, $id);
+
+        if (count($error)){
+            return $error;
+        }
+        
+        $this->db->execute('UPDATE products SET name = :name, quantity = :quantity, 
+        selling_price = :sellingPrice WHERE id = :id', 
+        ['name'=> $name, 'quantity'=>(int) $quantity, 'sellingPrice'=>(float) $sellingPrice, 'id'=> $id]
+        );
+
+        return [];
     }
+    /**
+     *  
+     * 
+     */
+    private function checkDetails(string $name, string $quantity, string $sellingPrice, int $excludeId): array
+{
+    $errors = [];
+
+    // your checks go here
+
+    if ($name == "") {
+        $errors[] = 'Name is required.';
+    }
+    if ($quantity === '') {
+        $errors[] = 'Quantity is required.';
+    }
+    if ($sellingPrice === '') {
+        $errors[] = 'Selling Price is required.';
+    }
+
+    // Number checks
+    if ($quantity < 0 || !ctype_digit($quantity) ){
+        $errors[] = "Quantity entered should be a whole number, 0 or more.";
+    }
+    if ($sellingPrice < 0 || !is_numeric($sellingPrice) ){
+        $errors[] = "Selling price must be a number, 0 or more.";
+    } 
+
+    // Check if product previously exists.
+
+    if (count($errors) == 0) {
+        $results = $this->db->select('SELECT id FROM products WHERE name = :name and id <> :exclude', 
+        ['name' => $name, 'exclude'=> $excludeId]);
+
+        if (count($results) > 0){
+            $errors[] = "Item already exists!";
+        }
+    }
+
+    return $errors;
+}
 }
