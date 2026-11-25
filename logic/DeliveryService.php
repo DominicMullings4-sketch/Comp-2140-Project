@@ -24,7 +24,13 @@ class DeliveryService
     public function calculateDeliveryDate(DateTime $savedAt): string
     {
         // TODO (Feature 5)
-        throw new Exception('DeliveryService::calculateDeliveryDate() is not built yet (F5: 5.3, 5.4).');
+        if($savedAt->format('H:i') < '10:00'){
+            return $savedAt->format('Y-m-d');
+        }
+
+        $nextDay = clone $savedAt; // If not done, the original variable will be modified.
+        $nextDay-> modify('+1 day');
+        return $nextDay->format('Y-m-d');
     }
 
     /**

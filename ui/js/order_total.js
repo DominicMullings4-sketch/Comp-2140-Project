@@ -14,5 +14,36 @@
 //   document.querySelector('#order-form').addEventListener('input', updateTotal);
 
 function updateTotal() {
-    // TODO (Feature 4)
+    let grandTotal = 0;
+
+    // Each product row in the order form has class="order-line"
+    document.querySelectorAll('#order-form .order-line').forEach(function (row) {
+        const productBox = row.querySelector('select');
+        const quantityBox = row.querySelector('input');
+
+        // The chosen product's price is on its <option data-price="1500">
+        const chosenOption = productBox.options[productBox.selectedIndex];
+        const price = parseFloat(chosenOption.dataset.price || '0');
+        const quantity = parseInt(quantityBox.value, 10) || 0;   // empty box counts as 0
+
+        const lineTotal = price * quantity;
+        row.querySelector('.line-total').textContent = lineTotal > 0 ? formatMoney(lineTotal) : '';
+        grandTotal += lineTotal;
+    });
+
+    document.getElementById('grand-total').textContent = formatMoney(grandTotal);
+}
+
+// 1500 becomes $1,500.00 (the same format as PHP's money())
+function formatMoney(amount) {
+    return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Recalculate whenever anything in the form changes, and once when the page opens
+// (in case the form was refilled after an error).
+const orderForm = document.getElementById('order-form');
+if (orderForm) {
+    orderForm.addEventListener('input', updateTotal);
+    orderForm.addEventListener('change', updateTotal);
+    updateTotal();
 }
