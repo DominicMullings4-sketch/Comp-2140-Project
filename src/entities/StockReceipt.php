@@ -44,8 +44,14 @@ class StockReceipt
      */
     public function addLine(Item $item, int $quantity, float $unitCost): void
     {
-        // TODO (P2): build this method. The note above says what it must do.
-        throw new Exception('StockReceipt::addLine() is not built yet.');
+        // Same rules as StockReceiptService::recordReceipt() on based-on-old-srs (1.3 and unit cost).
+        if ($quantity < 1) {
+            throw new Exception('Quantity must be a whole number, 1 or more.');
+        }
+        if ($unitCost < 0) {
+            throw new Exception('Unit cost must be a number, 0 or more.');
+        }
+        $this->lines[] = new StockReceiptLine($item, $quantity, $unitCost);
     }
 
     public function getEnteredBy(): User

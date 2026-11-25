@@ -39,8 +39,24 @@ class Order
      */
     public function addLine(Item $item, int $quantity): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('Order::addLine() is not built yet.');
+        // Same rules as OrderService::createOrder() on based-on-old-srs (4.2).
+        if ($quantity < 1) {
+            throw new Exception('Quantity must be a whole number, 1 or more.');
+        }
+
+        // Not more than is available. Adds up the same item across lines,
+        // so 2 lines of 3 can't get past an available quantity of 5.
+        $wanted = $quantity;
+        foreach ($this->lines as $line) {
+            if ($line->getItem()->getItemId() == $item->getItemId()) {
+                $wanted += $line->getQuantityOrdered();
+            }
+        }
+        if ($wanted > $item->getAvailableQuantity()) {
+            throw new Exception('Only ' . $item->getAvailableQuantity() . ' of "' . $item->getName() . '" available.');
+        }
+
+        $this->lines[] = new OrderLine($item, $quantity);   // OrderLine copies the price now (SR-4.5)
     }
 
     /**
@@ -69,8 +85,11 @@ class Order
      */
     public function confirmOrder(): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('Order::confirmOrder() is not built yet.');
+        if ($this->orderStatus !== OrderStatus::PendingConfirmation) {
+            throw new Exception('Only pending orders can be confirmed.');
+        }
+
+        $this->orderStatus = OrderStatus::OrderConfirmed;
     }
 
     /**
@@ -80,8 +99,23 @@ class Order
      */
     public function cancelOrder(): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('Order::cancelOrder() is not built yet.');
+        $statusAllowsCancellation = in_array(
+            $this->orderStatus,
+            [OrderStatus::PendingConfirmation, OrderStatus::OrderConfirmed],
+            true
+        );
+
+        $deliveryAllowsCancellation = in_array(
+            $this->getDeliveryStatus(),
+            [DeliveryStatus::NotScheduled, DeliveryStatus::Failed],
+            true
+        );
+
+        if (!$statusAllowsCancellation || !$deliveryAllowsCancellation) {
+            throw new Exception('This order cannot be cancelled.');
+        }
+
+        $this->orderStatus = OrderStatus::Cancelled;
     }
 
     /**
@@ -154,8 +188,19 @@ class Order
      */
     public function assignNewDelivery(User $worker, string $deliveryDate): Delivery
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('Order::assignNewDelivery() is not built yet.');
+        if ($this->orderStatus !== OrderStatus::OrderConfirmed) {
+            throw new Exception('Only confirmed orders can be assigned for delivery.');
+        }
+
+        if (!in_array(
+            $this->getDeliveryStatus(),
+            [DeliveryStatus::NotScheduled, DeliveryStatus::Failed],
+            true
+        )) {
+            throw new Exception('This order cannot be assigned for delivery.');
+        }
+
+        return new Delivery($this, $worker, $deliveryDate);
     }
 
     /**

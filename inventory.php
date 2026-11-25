@@ -5,6 +5,7 @@ require __DIR__ . '/src/bootstrap.php';
 
 $action = $_GET['action'] ?? 'items';
 $formWasSent = ($_SERVER['REQUEST_METHOD'] == 'POST');
+$id = $_GET['id'] ?? '';
 
 if ($action == 'receipt') {
     if ($formWasSent) {
@@ -12,8 +13,16 @@ if ($action == 'receipt') {
     } else {
         $inventoryUI->showStockReceiptForm();
     }
-} elseif ($action == 'item') {
+} elseif ($action == 'viewreceipt') {
+    $inventoryUI->showStockReceipt($id);                 // inventory.php?action=viewreceipt&id=SR-...
+} elseif ($action == 'item' && $formWasSent) {
     $inventoryUI->submitNewItem($_POST);
+} elseif ($action == 'edit') {
+    if ($formWasSent) {
+        $inventoryUI->submitItemEdit($id, $_POST);       // inventory.php?action=edit&id=I-...
+    } else {
+        $inventoryUI->showItems([], null, $id);
+    }
 } elseif ($action == 'supplier') {
     $inventoryUI->submitNewSupplier($_POST);
 } else {

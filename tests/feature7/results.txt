@@ -1,0 +1,6 @@
+TC-7.01 PASS {"DEMO7-A":"2026-05-12","DEMO7-B":"2026-05-12","DEMO7-C":"2026-05-13"}
+TC-7.02 PASS {"DEMO7-A":"2026-05-12","DEMO7-B":"2026-05-12","DEMO7-C":"2026-05-13"}
+TC-7.03 PASS {"DEMO7-A":{"order_id":"DEMO7-A","name":"Alicia Reid","phone":"8765550104","address":"8 Hope Road, Kingston","bearer":null,"bearer_id":null,"lines":["2 \u00d7 Wireless Earbuds","1 \u00d7 Phone Case"],"total":206.25},"DEMO7-B":{"order_id":"DEMO7-B","name":"Kemar Brown","phone":"8765550105","address":"14 Main Street, Ocho Rios","bearer":null,"bearer_id":null,"lines":["3 \u00d7 Phone Case"],"total":15.75}}
+TC-7.04 PASS ["DEMO7-A","DEMO7-B"]
+TC-7.05 PASS [{"order_status":"OutForDelivery","bearer_id":"U-DRIVER1","handed_over_at":"2026-05-12 09:45:00","worker_id":"U-DRIVER1","status":"Pending"}]
+TC-7.06 PASS {"0":{"order_status":"OrderConfirmed","bearer_id":null,"handed_over_at":null},"delivery_rows":0}

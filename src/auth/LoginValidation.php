@@ -26,8 +26,19 @@ class LoginValidation
      */
     public function validateCredentials(string $username, string $password): ?User
     {
-        // TODO (P1): build this method. The note above says what it must do.
-        throw new Exception('LoginValidation::validateCredentials() is not built yet.');
+        // Ported from Auth::checkPassword() (based-on-old-srs), plus the Active check (SC-2).
+        $user = $this->users->findByUsername($username);
+        if ($user == null) {
+            return null;   // no such username
+        }
+        if ($user->getStatus() != UserStatus::Active) {
+            return null;   // inactive users can't sign in
+        }
+        // password_verify() checks the typed password against the scrambled one in the database.
+        if (!password_verify($password, $user->getPasswordHash())) {
+            return null;
+        }
+        return $user;
     }
 
     /**

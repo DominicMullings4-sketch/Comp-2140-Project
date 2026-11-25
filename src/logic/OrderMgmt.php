@@ -3,6 +3,8 @@
 /**
  * OrderMgmt: Application Logic layer.
  * Feature owner: P4 (see the Track-It demo build plan whiteboard).
+ * createOrder, addOrderLine, saveOrder, getOrders and getOrderById are ported from OrderService
+ * on the based-on-old-srs branch.
  *
  * Generated from the class diagram. Keep class and method names exactly as they are,
  * because the code has to match the SDS design.
@@ -27,8 +29,7 @@ class OrderMgmt
      */
     public function createOrder(Customer $customer, ?OrderSource $orderSource = null): Order
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::createOrder() is not built yet.');
+        return new Order($customer, $orderSource);
     }
 
     /**
@@ -36,8 +37,7 @@ class OrderMgmt
      */
     public function addOrderLine(Order $order, Item $item, int $quantity): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::addOrderLine() is not built yet.');
+        $order->addLine($item, $quantity);   // the Order checks the quantity and throws if it's wrong
     }
 
     /**
@@ -46,8 +46,54 @@ class OrderMgmt
      */
     public function saveOrder(Order $order): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::saveOrder() is not built yet.');
+        if (count($order->getLines()) == 0) {
+            throw new Exception('Add at least one item to the order.');
+        }
+
+        // Save the order, its lines and the reserved stock in ONE transaction:
+        // either everything is saved, or (if anything fails) nothing is.
+        $this->db->beginTransaction();
+        try {
+            // Step 1: the order itself, linked to the customer
+            $source = null;
+            if ($order->getOrderSource() != null) {
+                $source = $order->getOrderSource()->value;
+            }
+            $this->db->execute(
+                'INSERT INTO orders (order_id, customer_id, order_source, entered_at, order_status)
+                 VALUES (:id, :customer, :source, :enteredAt, :status)',
+                [
+                    'id' => $order->getOrderId(),
+                    'customer' => $order->getCustomer()->getCustomerId(),
+                    'source' => $source,
+                    'enteredAt' => $order->getEnteredAt(),
+                    'status' => $order->getOrderStatus()->value,
+                ]
+            );
+
+            // Step 2: one row per item ordered, with the price at the time of the order (SR-4.5)
+            foreach ($order->getLines() as $line) {
+                $this->db->execute(
+                    'INSERT INTO order_lines (order_id, item_id, quantity_ordered, unit_price)
+                     VALUES (:order, :item, :quantity, :price)',
+                    [
+                        'order' => $order->getOrderId(),
+                        'item' => $line->getItem()->getItemId(),
+                        'quantity' => $line->getQuantityOrdered(),
+                        'price' => $line->getUnitPrice(),
+                    ]
+                );
+            }
+
+            // Step 3: reserve the stock (SR-3.6). On based-on-old-srs the stock went down straight away;
+            // here it is reserved, and only leaves stock when the delivery is completed (SR-6.4).
+            $this->inventory->reserveStock($order);
+
+            $this->db->commit();       // everything worked: keep it all
+        } catch (Exception $error) {
+            $this->db->rollback();     // something failed: undo it all
+            throw $error;
+        }
     }
 
     /**
@@ -56,8 +102,13 @@ class OrderMgmt
      */
     public function getOrders(): array
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::getOrders() is not built yet.');
+        $rows = $this->db->select('SELECT order_id FROM orders ORDER BY entered_at DESC', []);
+
+        $orders = [];
+        foreach ($rows as $row) {
+            $orders[] = $this->getOrderById($row['order_id']);
+        }
+        return $orders;
     }
 
     /**
@@ -67,8 +118,48 @@ class OrderMgmt
      */
     public function getOrderById(string $orderId): Order
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('OrderMgmt::getOrderById() is not built yet.');
+        // 1. The order itself
+        $rows = $this->db->select('SELECT * FROM orders WHERE order_id = :id', ['id' => $orderId]);
+        if (count($rows) == 0) {
+            throw new Exception('Order not found.');
+        }
+        $row = $rows[0];
+
+        // 2. Its customer
+        $customerRows = $this->db->select('SELECT * FROM customers WHERE customer_id = :id', ['id' => $row['customer_id']]);
+        $customer = Customer::fromRow($customerRows[0]);
+
+        // 3. Its lines. The JOIN adds each item's columns, so Item::fromRow() can rebuild the item.
+        $lineRows = $this->db->select(
+            'SELECT l.*, i.name, i.selling_price, i.stock_quantity, i.reserved_quantity
+             FROM order_lines l
+             JOIN items i ON i.item_id = l.item_id
+             WHERE l.order_id = :id
+             ORDER BY l.line_id',
+            ['id' => $orderId]
+        );
+        $lines = [];
+        foreach ($lineRows as $lineRow) {
+            $lines[] = OrderLine::fromRow($lineRow, Item::fromRow($lineRow));
+        }
+
+        $order = Order::fromRow($row, $customer, $lines);
+
+        // 4. Its deliveries, oldest first. Each Delivery::fromRow() adds itself to the order.
+        $deliveryRows = $this->db->select(
+            'SELECT * FROM deliveries WHERE order_id = :id ORDER BY assigned_at',
+            ['id' => $orderId]
+        );
+        foreach ($deliveryRows as $deliveryRow) {
+            $worker = $this->getUser($deliveryRow['worker_id']);
+            $recordedBy = null;
+            if ($deliveryRow['outcome_recorded_by'] != null) {
+                $recordedBy = $this->getUser($deliveryRow['outcome_recorded_by']);
+            }
+            Delivery::fromRow($deliveryRow, $order, $worker, $recordedBy);
+        }
+
+        return $order;
     }
 
     /**
@@ -109,5 +200,14 @@ class OrderMgmt
     {
         // TODO (P4): build this method. The note above says what it must do.
         throw new Exception('OrderMgmt::downloadInvoicePdf() is not built yet.');
+    }
+
+    /**
+     * Loads one user (a delivery's worker or recorder). Helper; not on the class diagram.
+     */
+    private function getUser(string $userId): User
+    {
+        $rows = $this->db->select('SELECT * FROM users WHERE user_id = :id', ['id' => $userId]);
+        return User::fromRow($rows[0]);
     }
 }

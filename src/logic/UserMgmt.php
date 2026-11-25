@@ -45,8 +45,11 @@ class UserMgmt
      */
     public function getUserById(string $userId): User
     {
-        // TODO (P1): build this method. The note above says what it must do.
-        throw new Exception('UserMgmt::getUserById() is not built yet.');
+        $rows = $this->db->select('SELECT * FROM users WHERE user_id = :id', ['id' => $userId]);
+        if (count($rows) == 0) {
+            throw new Exception('User not found.');
+        }
+        return User::fromRow($rows[0]);
     }
 
     /**
@@ -54,8 +57,11 @@ class UserMgmt
      */
     public function findByUsername(string $username): ?User
     {
-        // TODO (P1): build this method. The note above says what it must do.
-        throw new Exception('UserMgmt::findByUsername() is not built yet.');
+        $rows = $this->db->select('SELECT * FROM users WHERE username = :username', ['username' => $username]);
+        if (count($rows) == 0) {
+            return null;
+        }
+        return User::fromRow($rows[0]);
     }
 
     /**
@@ -91,7 +97,10 @@ class UserMgmt
      */
     public function saveTwoFactorSecret(User $user, string $secret): void
     {
-        // TODO (P1): build this method. The note above says what it must do.
-        throw new Exception('UserMgmt::saveTwoFactorSecret() is not built yet.');
+        // Ported from UserService::saveTwoFactorSecret() (based-on-old-srs). The secret is stored as it is,
+        // like before; DataAccess::encrypt() can be added later if the team wants it.
+        $user->setTwoFactorSecret($secret);
+        $this->db->execute('UPDATE users SET two_factor_secret = :secret WHERE user_id = :id',
+            ['secret' => $secret, 'id' => $user->getId()]);
     }
 }

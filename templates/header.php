@@ -20,8 +20,12 @@ if ($user != null) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($title) ?> · Track-It</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <?php if ($title === 'Delivery dispatch'): ?>
+        <link rel="stylesheet" href="assets/css/dispatch.css">
+    <?php endif; ?>
 </head>
-<body>
+<?php $isDispatch = $title === 'Delivery dispatch'; ?>
+<body<?= $isDispatch ? ' class="dispatch-page"' : '' ?>>
 <header class="topbar">
     <a class="brand" href="index.php">Track-It</a>
     <?php if ($user != null): ?>
@@ -30,7 +34,9 @@ if ($user != null) {
                 <a href="inventory.php">Inventory</a>
                 <a href="customers.php">Customers</a>
                 <a href="orders.php">Orders</a>
-                <a href="deliveries.php">Deliveries</a>
+                <?php if ($showOwnerMenu): ?>
+                    <a href="deliveries.php"<?= $isDispatch ? ' aria-current="page"' : '' ?>>Delivery dispatch</a>
+                <?php endif; ?>
             <?php else: ?>
                 <a href="deliveries.php?action=today">Today's deliveries</a>
             <?php endif; ?>
@@ -52,3 +58,7 @@ if ($user != null) {
     </div>
 <?php endif; ?>
 <main>
+<?php $flash = take_flash(); // a one-time message from set_flash(), shown once ?>
+<?php if ($flash != null): ?>
+    <p class="<?= e($flash['type']) ?>"><?= e($flash['message']) ?></p>
+<?php endif; ?>

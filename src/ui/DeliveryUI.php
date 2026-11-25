@@ -23,12 +23,56 @@ class DeliveryUI
     }
 
     /**
-     * SR-5.1, SR-5.3: orders awaiting assignment, each with a worker dropdown and a date box.
+     * Graded SRS SR-7.2 and SR-7.3: owner dispatch list, assignments and handovers.
      */
     public function showAwaitingAssignment(): void
     {
-        // TODO (P5): build this method. The note above says what it must do.
-        throw new Exception('DeliveryUI::showAwaitingAssignment() is not built yet.');
+        $owner = $this->permission->requireRole([UserRole::BusinessOwner]);
+        $date = $_GET['date'] ?? today();
+        $parsed = is_string($date) ? DateTimeImmutable::createFromFormat('!Y-m-d', $date) : false;
+        if (!$parsed || $parsed->format('Y-m-d') !== $date) {
+            http_response_code(400);
+            render_header('Invalid dispatch date', $owner);
+            echo '<p>Please select a valid dispatch date.</p><a href="deliveries.php">Delivery dispatch</a>';
+            render_footer();
+            return;
+        }
+
+        $_SESSION['dispatch_token'] ??= bin2hex(random_bytes(32));
+        $token = $_SESSION['dispatch_token'];
+        $error = null;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $order = $_POST['order'] ?? null;
+            $worker = $_POST['worker'] ?? null;
+            try {
+                if (!is_string($_POST['token'] ?? null) || !hash_equals($token, $_POST['token'])) {
+                    throw new DomainException('Refresh the page and try again.');
+                }
+                if (!is_string($order) || !is_string($worker) || $worker === '') {
+                    throw new DomainException('Select an order and bearer.');
+                }
+                switch ($_POST['action'] ?? '') {
+                    case 'assign':
+                        $this->deliveries->assignBearer($order, $worker, $date);
+                        break;
+                    case 'handover':
+                        $this->deliveries->recordHandover($order, $date, $worker);
+                        break;
+                    default:
+                        throw new DomainException('Choose a valid dispatch action.');
+                }
+                redirect('deliveries.php?date=' . $date);
+            } catch (DomainException $exception) {
+                http_response_code(400);
+                $error = $exception->getMessage();
+            }
+        }
+        $orders = $this->deliveries->dispatchList($date);
+        $workers = $this->deliveries->getDeliveryWorkers();
+        $handovers = $this->deliveries->handovers($date);
+        render_header('Delivery dispatch', $owner);
+        require __DIR__ . '/../../templates/dispatch.php';
+        render_footer();
     }
 
     /**

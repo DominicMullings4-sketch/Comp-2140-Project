@@ -40,6 +40,41 @@ function redirect($page)
     exit;
 }
 
+// A one-time message shown on the NEXT page, for example after saving then redirecting.
+// set_flash('Customer saved.');   or   set_flash('Customer not found.', 'error');
+function set_flash($message, $type = 'success')
+{
+    $_SESSION['flash'] = ['message' => $message, 'type' => $type];
+}
+
+// Reads the one-time message and removes it, so it only shows once. header.php calls this.
+function take_flash()
+{
+    $flash = $_SESSION['flash'] ?? null;
+    unset($_SESSION['flash']);
+    return $flash;
+}
+
+// Prints a list of error messages in a red box (does nothing when the list is empty).
+function show_errors($errors)
+{
+    if (count($errors) == 0) {
+        return;
+    }
+    echo '<ul class="error">';
+    foreach ($errors as $error) {
+        echo '<li>' . e($error) . '</li>';
+    }
+    echo '</ul>';
+}
+
+// Splits an Exception's message into a list of errors.
+// The Mgmt classes put several problems in one Exception, one per line, so the page can list them all.
+function error_list(Exception $exception)
+{
+    return explode("\n", $exception->getMessage());
+}
+
 // Prints the top of every page: the title and the menu for the user's role.
 function render_header($title, $user = null)
 {

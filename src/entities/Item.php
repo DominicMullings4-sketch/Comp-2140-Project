@@ -55,8 +55,10 @@ class Item
      */
     public function reserveQuantity(int $quantity): void
     {
-        // TODO (P2): build this method. The note above says what it must do.
-        throw new Exception('Item::reserveQuantity() is not built yet.');
+        if ($quantity > $this->getAvailableQuantity()) {
+            throw new Exception('Only ' . $this->getAvailableQuantity() . ' of "' . $this->name . '" available.');
+        }
+        $this->reservedQuantity += $quantity;
     }
 
     /**
@@ -64,8 +66,7 @@ class Item
      */
     public function unreserveQuantity(int $quantity): void
     {
-        // TODO (P2): build this method. The note above says what it must do.
-        throw new Exception('Item::unreserveQuantity() is not built yet.');
+        $this->reservedQuantity -= $quantity;
     }
 
     /**
@@ -73,8 +74,7 @@ class Item
      */
     public function increaseStockQuantity(int $quantity): void
     {
-        // TODO (P2): build this method. The note above says what it must do.
-        throw new Exception('Item::increaseStockQuantity() is not built yet.');
+        $this->stockQuantity += $quantity;
     }
 
     /**
@@ -82,8 +82,7 @@ class Item
      */
     private function decreaseStockQuantity(int $quantity): void
     {
-        // TODO (P2): build this method. The note above says what it must do.
-        throw new Exception('Item::decreaseStockQuantity() is not built yet.');
+        $this->stockQuantity -= $quantity;
     }
 
     /**
@@ -92,6 +91,9 @@ class Item
      */
     public function setSellingPrice(float $price): void
     {
+        if ($price < 0) {
+            throw new Exception('Selling price must be a number, 0 or more.');
+        }
         $this->sellingPrice = $price;
     }
 
@@ -109,8 +111,8 @@ class Item
      */
     public function completeDelivery(int $quantity): void
     {
-        // TODO (P2): build this method. The note above says what it must do.
-        throw new Exception('Item::completeDelivery() is not built yet.');
+        $this->decreaseStockQuantity($quantity);
+        $this->unreserveQuantity($quantity);
     }
 
     /**

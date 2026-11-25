@@ -13,6 +13,8 @@ if ($action == 'new') {
     } else {
         $orderUI->showNewOrderForm($_GET['customer'] ?? '');
     }
+} elseif ($action == 'view') {
+    $orderUI->showOrder($orderId);                       // orders.php?action=view&order=ORD-...
 } elseif ($action == 'cancel') {
     $orderUI->submitCancel($orderId);
 } elseif ($action == 'invoice') {

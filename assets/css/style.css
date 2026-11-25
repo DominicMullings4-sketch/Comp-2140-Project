@@ -34,3 +34,21 @@ input, select, textarea { width: 100%; padding: 8px; border: 1px solid var(--lin
 .error { color: var(--danger); background: #fdecea; border: 1px solid #f5c2bd; padding: 8px 12px; border-radius: 4px; }
 .success { color: var(--accent); background: #e6f4ef; border: 1px solid #b7e0cf; padding: 8px 12px; border-radius: 4px; }
 .field-error { color: var(--danger); font-size: 0.85rem; }
+
+/* Sections, messages and small screens (brought over from the based-on-old-srs pages) */
+.card { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 16px 20px; margin-bottom: 24px; }
+.card.narrow { max-width: 420px; margin: 32px auto; }
+.card form { border: 0; padding: 0; max-width: none; }
+.card table { margin-top: 8px; }
+h2 { font-size: 1.25rem; margin: 0 0 12px; }
+.error, .success { margin: 0 0 16px; }
+ul.error { list-style-position: inside; }
+form button, form .button { margin-top: 16px; }
+td input, td select { min-width: 80px; }
+.inline { display: inline; background: none; border: 0; padding: 0; margin: 0; }
+
+@media (max-width: 600px) {
+    main { padding: 0 8px; }
+    .card { padding: 12px; }
+    th, td { padding: 6px; font-size: 0.95rem; }
+}

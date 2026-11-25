@@ -25,8 +25,7 @@ class TwoFactorAuth
      */
     public function generateSecret(): string
     {
-        // TODO (P1): build this method. The note above says what it must do.
-        throw new Exception('TwoFactorAuth::generateSecret() is not built yet.');
+        return totp_random_secret();   // see src/auth/totp.php
     }
 
     /**
@@ -43,8 +42,19 @@ class TwoFactorAuth
      */
     public function verifyAppCode(User $user, string $code): bool
     {
-        // TODO (P1): build this method. The note above says what it must do.
-        throw new Exception('TwoFactorAuth::verifyAppCode() is not built yet.');
+        // Ported from Auth::verifyCode() (based-on-old-srs).
+        // Also accepts the previous 30-second code, in case the user typed it just as it changed.
+        $secret = $user->getTwoFactorSecret();
+        if ($secret == null) {
+            return false;
+        }
+        if (hash_equals(totp_code($secret), $code)) {
+            return true;
+        }
+        if (hash_equals(totp_code($secret, time() - 30), $code)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -63,5 +73,15 @@ class TwoFactorAuth
     {
         // TODO (P1): build this method. The note above says what it must do.
         throw new Exception('TwoFactorAuth::verifyEmailCode() is not built yet.');
+    }
+
+    /**
+     * First sign-in with two-factor on: saves the new secret once the user has proved it works
+     * (they typed a correct code). Ported from Auth::saveSecret() (based-on-old-srs).
+     * NOT ON THE CLASS DIAGRAM YET: add it to TwoFactorAuth in the SDS.
+     */
+    public function saveSecret(User $user, string $secret): void
+    {
+        $this->users->saveTwoFactorSecret($user, $secret);
     }
 }

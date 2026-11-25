@@ -18,6 +18,12 @@ define('TIMEZONE', 'America/Jamaica');
 // Show PHP errors in the browser while building. Set to false for the demo.
 define('SHOW_ERRORS', true);
 
-// Until the login page is built, you are signed in automatically as this test user.
-// Use 'owner', 'staff', 'driver1' or 'driver2' to test each role. Set to '' for the demo.
+// Signs you in automatically as this test user, so you can skip the login page while building.
+// Use 'owner', 'staff', 'driver1' or 'driver2' to test each role.
+// Set it to '' to use the real login page (and before the demo).
 define('DEV_AUTO_LOGIN', 'owner');
+
+// Two-factor sign-in with an authenticator app (SC-2).
+// false = password only while building, true = password + 6-digit code (for the demo).
+// If your config.php doesn't have this line, bootstrap.php treats it as false.
+define('USE_TWO_FACTOR', false);

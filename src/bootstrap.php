@@ -12,6 +12,12 @@ if (!file_exists(__DIR__ . '/../config/config.php')) {
 }
 require __DIR__ . '/../config/config.php';
 
+// Settings added after some people made their config.php. If yours doesn't have one,
+// it gets the default here, so the page still runs.
+if (!defined('USE_TWO_FACTOR')) {
+    define('USE_TWO_FACTOR', false);   // false = password only, true = password + authenticator code
+}
+
 date_default_timezone_set(TIMEZONE);
 if (SHOW_ERRORS) {
     ini_set('display_errors', '1');
@@ -56,6 +62,7 @@ require __DIR__ . '/logic/ReportingMgmt.php';
 require __DIR__ . '/logic/UserMgmt.php';
 
 // Authentication & Authorization layer
+require __DIR__ . '/auth/totp.php';   // helper functions for the 6-digit codes (not a class, so not on the diagram)
 require __DIR__ . '/auth/LoginValidation.php';
 require __DIR__ . '/auth/TwoFactorAuth.php';
 require __DIR__ . '/auth/UserPermission.php';
