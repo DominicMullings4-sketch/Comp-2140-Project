@@ -1,0 +1,4 @@
+# Each person's own settings (database password etc.)
+config/config.php
+
+README.md
