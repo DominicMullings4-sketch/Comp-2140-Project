@@ -44,8 +44,7 @@ class Invoice
      */
     public function markVoid(): void
     {
-        // TODO (P4): build this method. The note above says what it must do.
-        throw new Exception('Invoice::markVoid() is not built yet.');
+        $this->status = InvoiceStatus::Void;
     }
 
     /**
