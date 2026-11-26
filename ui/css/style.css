@@ -157,6 +157,14 @@ button:disabled {
     cursor: not-allowed;
 }
 
+/* A wide table (the delivery list) scrolls sideways inside its card instead of being cut off */
+.table-scroll {
+    overflow-x: auto;
+}
+.table-scroll td select {
+    min-width: 11rem;
+}
+
 /* ---------- Printing (the invoice's "Print invoice" button, or Ctrl + P on any page)
    The browser uses these rules instead of the screen look when printing or saving as PDF.
    .no-print   = hide this on paper (menus, links, buttons)

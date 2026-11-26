@@ -75,6 +75,9 @@ class DeliveryUI
             <?php if (count($orders) === 0): ?>
                 <p>No orders are scheduled for dispatch on this date.</p>
             <?php else: ?>
+                <!-- The wrapper lets this wide table scroll sideways inside the card in a narrow window,
+                     instead of the last column being cut off. -->
+                <div class="table-scroll">
                 <table>
                     <tr>
                         <th>Order #</th>
@@ -90,6 +93,7 @@ class DeliveryUI
                         <?php $this->showOrderRow($o, $bearers, $formAction); ?>
                     <?php endforeach; ?>
                 </table>
+                </div>
             <?php endif; ?>
         </section>
         <?php
