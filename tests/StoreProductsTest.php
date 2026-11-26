@@ -37,7 +37,7 @@ final class StoreProductsTest extends TestCase
         $item = $this->inv->logStockItem('Phone Case', null, 10, 2500, $this->staffId);
         $listed = $this->inv->getStockItems(UserRole::OfficeStaff)[0];
         $this->assertFalse($listed->isTakenForDelivery());
-        $this->assertEquals(5000.0, $item->getTotalValue());
+        $this->assertEquals(25000.0, $item->getTotalValue());
     }
 
     #[Test]
