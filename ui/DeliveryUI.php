@@ -54,8 +54,11 @@ class DeliveryUI
         render_header('Deliveries');
         ?>
         <section class="deliveries-banner">
+            <!-- Decoration only: a dotted "map" with three dashed delivery routes (drawn in style.css).
+                 aria-hidden="true" tells screen readers to skip it. -->
+            <div class="route-print" aria-hidden="true"><i></i><i></i><i></i></div>
             <p class="banner-date"><?= h($dateInWords) ?></p>
-            <h1>Deliveries</h1>
+            <h1>Delivery Dispatch</h1>
             <div class="banner-totals">
                 <div><span class="total-number"><?= $needBearer ?></span> Need a bearer</div>
                 <div><span class="total-number"><?= $assigned ?></span> Assigned</div>
@@ -140,7 +143,7 @@ class DeliveryUI
                 <form method="get" action="deliveries.php">
                     <label for="date">Show orders due on</label>
                     <input id="date" name="date" type="date" value="<?= h($date) ?>" required>
-                    <button type="submit">Show</button>
+                    <button type="submit">Show orders &rarr;</button>
                     <a class="button secondary" href="deliveries.php">Today</a>
                 </form>
             </aside>

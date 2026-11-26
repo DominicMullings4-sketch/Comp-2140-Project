@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 25, 2026 at 09:04 PM
+-- Generation Time: Nov 26, 2026 at 03:02 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -68,9 +68,12 @@ CREATE TABLE `deliveries` (
 --
 
 INSERT INTO `deliveries` (`delivery_id`, `order_id`, `worker_id`, `delivery_date`, `status`, `comment`, `assigned_at`, `outcome_recorded_at`, `outcome_recorded_by`) VALUES
-(1, 1, NULL, '2026-11-25', 'Pending', NULL, NULL, NULL, NULL),
-(2, 2, NULL, '2026-11-25', 'Pending', NULL, NULL, NULL, NULL),
-(3, 3, NULL, '2026-11-25', 'Pending', NULL, NULL, NULL, NULL);
+(1, 1, 2, '2026-11-25', 'Failed', NULL, '2026-11-25 20:56:20', '2026-11-25 22:23:22', 1),
+(2, 2, 2, '2026-11-25', 'Delivered', NULL, '2026-11-25 16:05:27', '2026-11-25 22:23:19', 1),
+(3, 3, 3, '2026-11-25', 'Delivered', NULL, '2026-11-25 16:05:30', '2026-11-25 22:24:26', 1),
+(4, 4, NULL, '2026-11-26', 'Pending', NULL, NULL, NULL, NULL),
+(5, 5, NULL, '2026-11-26', 'Pending', NULL, NULL, NULL, NULL),
+(6, 6, NULL, '2026-11-26', 'Pending', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -91,14 +94,14 @@ CREATE TABLE `items` (
 --
 
 INSERT INTO `items` (`item_id`, `name`, `stock_quantity`, `reserved_quantity`, `selling_price`) VALUES
-(1, 'Phone case - Black', 20, 0, 1500.00),
+(1, 'Phone case - Black', 18, 0, 1500.00),
 (2, 'USB-C charger 20W', 12, 0, 3200.00),
 (3, 'Wireless earbuds', 8, 0, 6500.00),
 (4, 'Ring light 10 inch', 4, 0, 4800.00),
 (5, 'Bluetooth speaker mini', 17, 0, 5200.00),
 (6, 'Smart Bulb 12 W', 2, 0, 3500.00),
 (7, '14\" Laptop', 8, 0, 75000.00),
-(9, '14kWh Power Bank', 15, 0, 12500.00);
+(9, '14kWh Power Bank', 14, 0, 12500.00);
 
 -- --------------------------------------------------------
 
@@ -119,7 +122,10 @@ CREATE TABLE `orders` (
 INSERT INTO `orders` (`order_id`, `customer_id`, `created_at`) VALUES
 (1, 4, '2026-11-25 02:55:38'),
 (2, 4, '2026-11-25 08:08:08'),
-(3, 2, '2026-11-25 08:09:28');
+(3, 2, '2026-11-25 08:09:28'),
+(4, 3, '2026-11-25 22:25:35'),
+(5, 1, '2026-11-25 22:32:49'),
+(6, 2, '2026-11-25 22:33:07');
 
 -- --------------------------------------------------------
 
@@ -145,7 +151,10 @@ INSERT INTO `order_lines` (`line_id`, `order_id`, `item_id`, `quantity_ordered`,
 (3, 2, 4, 1, 4800.00),
 (4, 2, 1, 2, 1500.00),
 (5, 2, 5, 1, 5200.00),
-(6, 3, 1, 3, 1500.00);
+(6, 3, 1, 3, 1500.00),
+(7, 4, 1, 1, 1500.00),
+(8, 5, 9, 1, 12500.00),
+(9, 6, 1, 1, 1500.00);
 
 -- --------------------------------------------------------
 
@@ -210,9 +219,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `name`, `username`, `password_hash`, `two_factor_secret`, `role`) VALUES
-(1, 'Staff One', 'staff1', '$2y$10$JHR7VQQg4A75ja/piExtHOozLPUuiInVxnI/tM/wR76wvYpeEgv3u', NULL, 'OfficeStaff'),
-(2, 'Bearer One', 'bearer1', '$2y$10$JHR7VQQg4A75ja/piExtHOozLPUuiInVxnI/tM/wR76wvYpeEgv3u', NULL, 'DeliveryWorker'),
-(3, 'Bearer Two', 'bearer2', '$2y$10$JHR7VQQg4A75ja/piExtHOozLPUuiInVxnI/tM/wR76wvYpeEgv3u', NULL, 'DeliveryWorker');
+(1, 'Jair Simms', 'staff1', '$2y$10$JHR7VQQg4A75ja/piExtHOozLPUuiInVxnI/tM/wR76wvYpeEgv3u', NULL, 'OfficeStaff'),
+(2, 'Dante Thames', 'bearer1', '$2y$10$JHR7VQQg4A75ja/piExtHOozLPUuiInVxnI/tM/wR76wvYpeEgv3u', NULL, 'DeliveryWorker'),
+(3, 'Tevin Hislop', 'bearer2', '$2y$10$JHR7VQQg4A75ja/piExtHOozLPUuiInVxnI/tM/wR76wvYpeEgv3u', NULL, 'DeliveryWorker');
 
 --
 -- Indexes for dumped tables
@@ -293,7 +302,7 @@ ALTER TABLE `customers`
 -- AUTO_INCREMENT for table `deliveries`
 --
 ALTER TABLE `deliveries`
-  MODIFY `delivery_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `delivery_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `items`
@@ -305,13 +314,13 @@ ALTER TABLE `items`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `order_lines`
 --
 ALTER TABLE `order_lines`
-  MODIFY `line_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `line_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `stock_receipts`

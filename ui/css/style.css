@@ -1,4 +1,6 @@
-/* Track-It: one simple stylesheet for every page. Works on phones and laptops. */
+/* Track-It: one simple stylesheet for every page. Works on phones and laptops.
+   Colours: the original Track-It theme. Green #0b6e4f for links and buttons, dark grey #1f2933 text,
+   light grey #f5f7fa page, grey #d9e2ec lines. The Deliveries page has its own green theme (further down). */
 
 * { box-sizing: border-box; }
 
@@ -8,7 +10,7 @@ body {
     font-size: 16px;
     line-height: 1.5;
     color: #1f2933;
-    background: #f4f6f8;
+    background: #f5f7fa;
 }
 
 /* ---------- Top bar and menu */
@@ -18,8 +20,9 @@ body {
     align-items: center;
     gap: 0.5rem 1.5rem;
     padding: 0.75rem 1.5rem;
-    background: #1f3a5f;
-    color: #fff;
+    background: #fff;
+    color: #1f2933;
+    border-bottom: 1px solid #d9e2ec;
 }
 .brand { 
     font-weight: 700; 
@@ -29,17 +32,26 @@ body {
     display: flex; 
     flex-wrap: wrap; 
     gap: 0.25rem 1rem; 
+    flex: 1;   /* the menu takes all the space left of the brand, so Log out can go to the far right */
+}
+/* Log out: pushed to the far right of the bar. margin-left: auto uses up all the spare space on its left. */
+.topbar .logout {
+    margin-left: auto;
 }
 .topbar a { 
-    color: #dbe7f5; 
+    color: #0b6e4f; 
+    font-weight: 500; 
     text-decoration: none; 
 }
 .topbar a:hover { 
-    color: #fff; 
+    color: #095c42; 
     text-decoration: underline;
  }
 
 /* ---------- Page area */
+a {
+    color: #0b6e4f;
+}
 main { 
     max-width: 1000px; 
     margin: 0 auto; 
@@ -52,8 +64,8 @@ h1 {
 
 .card {
     background: #fff;
-    border: 1px solid #dde3ea;
-    border-radius: 8px;
+    border: 1px solid #d9e2ec;
+    border-radius: 6px;
     padding: 1.25rem 1.5rem;
     margin-bottom: 1.5rem;
 }
@@ -73,7 +85,7 @@ input, select, textarea {
     max-width: 420px;
     padding: 0.5rem;
     font: inherit;
-    border: 1px solid #b8c2cc;
+    border: 1px solid #cbd2d9;
     border-radius: 4px;
 }
 button, .button {
@@ -82,17 +94,18 @@ button, .button {
     padding: 0.5rem 1.1rem;
     font: inherit;
     color: #fff;
-    background: #1f3a5f;
+    background: #0b6e4f;
     border: none;
     border-radius: 4px;
     text-decoration: none;
     cursor: pointer;
 }
 button:hover, .button:hover { 
-    background: #2b5283; 
+    background: #095c42; 
 }
 .button.secondary { 
-    background: #6b7785; 
+    background: #e4e7eb; 
+    color: #1f2933; 
 }
 
 /* ---------- Tables */
@@ -103,11 +116,11 @@ table {
 th, td { 
     text-align: left; 
     padding: 0.5rem; 
-    border-bottom: 1px solid #e4e8ec; 
+    border-bottom: 1px solid #d9e2ec; 
     vertical-align: top; 
 }
 th { 
-    background: #eef2f6; 
+    background: #f0f4f8; 
 }
 td.number, th.number { 
     text-align: right; 
@@ -121,107 +134,61 @@ td.number, th.number {
     list-style-position: inside; 
 }
 .flash.success { 
-    background: #e3f4e8; 
-    color: #1d6b35; 
+    background: #e6f4ef; 
+    color: #0b6e4f; 
+    border: 1px solid #b7e0cf; 
 }
 .flash.error   { 
-    background: #fde8e8; 
-    color: #9b1c1c; 
-}
-
-/* ---------- Small screens (phones, e.g. a bearer on the road)
-   Everything inside this block ONLY applies when the screen is 600px wide or less.
-   Above that, the rules higher up in this file are used unchanged. */
-
-@media (max-width: 600px) {
-    /* Less empty space around the page, so the content gets the room. */
-    main { 
-        padding: 0.75rem; 
-    }
-    .card { 
-        padding: 1rem; 
-    }
-    .card.narrow { 
-        margin: 1rem auto; 
-    }
-    h1 { 
-        font-size: 1.5rem; 
-    }
-    h2 { 
-        font-size: 1.2rem; 
-    }
-
-    /* Menu: smaller side padding, and each link gets a bigger area to tap. */
-    .topbar { 
-        padding: 0.75rem 1rem; 
-    }
-    .topbar nav { 
-        gap: 0.25rem 0.5rem; 
-    }
-    .topbar a { 
-        display: inline-block; 
-        padding: 0.4rem 0.5rem; 
-    }
-
-    /* Form boxes: use the full width. 16px text stops phones zooming in when a box is tapped. */
-    input, select, textarea { 
-        max-width: none; 
-        font-size: 16px; 
-    }
-
-    /* Buttons: full width and taller, so they are easy to hit with a thumb. */
-    button, .button { 
-        display: block; 
-        width: 100%; 
-        text-align: center; 
-        padding: 0.75rem; 
-    }
-
-    /* Wide tables: scroll sideways INSIDE the card instead of stretching the whole page.
-       A minimum column width stops the text being squashed into one word per line. */
-    table { 
-        display: block; 
-        overflow-x: auto; }
-    th, td { 
-        min-width: 7rem; 
-        font-size: 0.95rem; 
-    }
-
-    /* Dropdowns and comment boxes inside a table need some width, or they get squashed. */
-    td select, td textarea, td input { 
-        min-width: 12rem; 
-    }
+    background: #fdecea; 
+    color: #b42318; 
+    border: 1px solid #f5c2bd; 
 }
 
 /* ---------- Deliveries page (DeliveryUI::showDeliveries)
-   Banner with the date and totals, one card per order, date picker on the right.
-   These class names are only used on deliveries.php, so other pages are not affected. */
+   Uses Terrell's dispatch theme: deep forest green, cream background and serif headings.
+   header.php gives this page <body class="deliveries-page">, so every rule here starts with
+   .deliveries-page (or uses class names only found on this page). Other pages are not affected.
+   Colours: forest #174737, dark banner #143f34, cream #f3f5ef, card #fffefa, lines #d3dcd3, muted #52675f */
 
-/* Banner: dark blue box at the top of the page */
+/* Cream page and dark green text */
+.deliveries-page {
+    background: #f3f5ef;
+    color: #172f2b;
+}
+.deliveries-page main {
+    max-width: 1190px;
+}
+
+/* Banner: deep green box at the top of the page */
 .deliveries-banner {
-    background: #1f3a5f;
-    color: #fff;
-    border-radius: 12px;
-    padding: 1.5rem 1.75rem;
-    margin-bottom: 1.5rem;
+    background: #143f34;
+    color: #f4f5e9;
+    border-radius: 20px;
+    padding: 2rem 2.25rem;
+    margin-bottom: 1.75rem;
 }
 .deliveries-banner h1 {
     margin: 0;
-    font-size: 2.2rem;
+    font-family: Georgia, serif;
+    font-weight: 500;
+    font-size: 3rem;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
 }
 .banner-date {
-    margin: 0 0 0.25rem;
-    color: #b9cde6;
-    font-size: 0.85rem;
+    margin: 0 0 0.5rem;
+    font-family: Consolas, Menlo, monospace;
+    font-size: 0.8rem;
+    color: #d3e8af;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
 }
 .banner-totals {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem 2rem;
-    margin-top: 1rem;
-    color: #dbe7f5;
+    margin-top: 1.25rem;
+    color: #e4ece0;
 }
 .total-number {
     font-size: 1.5rem;
@@ -233,65 +200,74 @@ td.number, th.number {
 /* Two columns: order cards (wide, left) and the date picker (narrow, right) */
 .deliveries-layout {
     display: grid;
-    grid-template-columns: 1fr 260px;
+    grid-template-columns: 1fr 320px;   /* wide enough for both date buttons side by side */
     gap: 1.5rem;
     align-items: start;
 }
 .deliveries-layout h2 {
     margin-top: 0;
+    font-family: Georgia, serif;
+    font-weight: 500;
+    font-size: 1.5rem;
 }
 
-/* The small grey bubble with the number of orders */
+/* The small green bubble with the number of orders */
 .count {
     display: inline-block;
     padding: 0.1rem 0.6rem;
-    background: #dde3ea;
+    background: #dde7d9;
+    color: #314e40;
     border-radius: 12px;
-    font-size: 0.85rem;
+    font-family: system-ui, sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
     vertical-align: middle;
 }
 
-/* One card per order */
+/* One cream "ticket" per order */
 .order-card {
-    background: #fff;
-    border: 1px solid #dde3ea;
-    border-radius: 10px;
+    background: #fffefa;
+    border: 1px solid #d3dcd3;
+    border-radius: 14px;
     margin-bottom: 1rem;
-    overflow: hidden;   /* keeps the grey action strip inside the rounded corners */
+    overflow: hidden;   /* keeps the action strip inside the rounded corners */
 }
 .order-card-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.25rem 0;
+    padding: 1.1rem 1.4rem 0;
 }
 .order-number {
     font-family: Consolas, Menlo, monospace;
-    font-size: 0.85rem;
-    color: #6b7785;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    color: #52675f;
 }
 .order-card h3 {
-    margin: 0.4rem 1.25rem 0.75rem;
-    font-size: 1.35rem;
+    margin: 0.5rem 1.4rem 0.9rem;
+    font-family: Georgia, serif;
+    font-weight: 500;
+    font-size: 1.6rem;
 }
 .order-card-details {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem 2.5rem;
-    padding: 0 1.25rem 1rem;
+    padding: 0 1.4rem 1.1rem;
 }
 .detail-label {
     display: block;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 600;
-    color: #6b7785;
+    color: #52675f;
 }
 
-/* Grey strip at the bottom of each card with the Assign form */
+/* Light green strip at the bottom of each card with the Assign form */
 .order-card-actions {
-    background: #eef2f6;
-    border-top: 1px solid #dde3ea;
-    padding: 0.75rem 1.25rem;
+    background: #f1f4ed;
+    border-top: 1px solid #d3dcd3;
+    padding: 0.85rem 1.4rem;
 }
 .assign-row {
     display: flex;
@@ -303,31 +279,63 @@ td.number, th.number {
 }
 .done-note {
     margin: 0;
-    color: #6b7785;
+    color: #52675f;
+}
+
+/* Date picker box on the right */
+.deliveries-page .date-panel {
+    background: #fffefa;
+    border: 1px solid #d3dcd3;
+    border-radius: 14px;
+}
+
+/* Form boxes and buttons on this page: rounder, in forest green */
+.deliveries-page input,
+.deliveries-page select {
+    border: 1px solid #aebcaf;
+    border-radius: 7px;
+    background: #fff;
+}
+.deliveries-page button,
+.deliveries-page .button {
+    background: #174737;
+    border-radius: 7px;
+    font-weight: 600;
+}
+.deliveries-page button:hover,
+.deliveries-page .button:hover {
+    background: #27624b;
+}
+.deliveries-page .button.secondary {
+    background: #d2e9ad;
+    color: #193c29;
+}
+.deliveries-page .button.secondary:hover {
+    background: #bfdb99;
 }
 
 /* Coloured status labels (the class is chosen in showDeliveries) */
 .status-pill {
-    padding: 0.2rem 0.7rem;
-    border-radius: 12px;
-    font-size: 0.8rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 18px;
+    font-size: 0.76rem;
     font-weight: 600;
 }
-.status-pending   { 
-    background: #fff0c6; 
-    color: #714c08; 
+.status-pending {
+    background: #fff0c6;
+    color: #714c08;
 }
-.status-out       { 
-    background: #dbe7f5; color: 
-    #1f3a5f; 
+.status-out {
+    background: #dff1e3;
+    color: #23563b;
 }
 .status-delivered {
-     background: #e3f4e8; 
-     color: #1d6b35; 
-    }
-.status-failed    { 
-    background: #fde8e8; 
-    color: #9b1c1c; 
+    background: #d2e9ad;
+    color: #193c29;
+}
+.status-failed {
+    background: #fdecea;
+    color: #b42318;
 }
 
 /* Phones: one column, date picker above the orders, Assign form stacked */
@@ -338,12 +346,145 @@ td.number, th.number {
     .date-panel {
         order: -1;   /* show the date picker first on small screens */
     }
+    .deliveries-banner {
+        padding: 1.5rem;
+    }
     .deliveries-banner h1 {
-        font-size: 1.7rem;
+        font-size: 2.1rem;
     }
     .assign-row {
         flex-direction: column;
         align-items: stretch;
+    }
+}
+
+/* ---------- Deliveries page: Terrell's finishing touches */
+
+/* Menu on this page: muted links, forest-green brand, and the current page highlighted.
+   header.php adds aria-current="page" to the Deliveries link while you are on it. */
+.deliveries-page .topbar {
+    background: #f3f5ef;
+    border-bottom: 1px solid #d3dcd3;
+}
+.deliveries-page .brand {
+    color: #174737;
+    font-size: 1.35rem;
+    letter-spacing: -0.04em;
+}
+.deliveries-page .topbar a {
+    color: #42544b;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+}
+.deliveries-page .topbar a[aria-current="page"] {
+    color: #174737;
+    background: #e6eee3;
+    font-weight: 700;
+}
+
+/* Banner: room for the route map, and a much bigger serif heading */
+.deliveries-banner {
+    position: relative;   /* the route map is placed inside the banner, measured from its corners */
+    overflow: hidden;     /* anything of the map that sticks out is cut off */
+    isolation: isolate;   /* lets the map sit behind the text (z-index -1) but still inside the banner */
+    padding: 2.75rem 2.75rem 2.25rem;
+}
+.deliveries-banner h1 {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);   /* grows with the window: never smaller than 2.5rem, never bigger than 4.5rem */
+    letter-spacing: -0.055em;
+}
+
+/* The totals: number and label side by side, with a thin line between each group */
+.banner-totals {
+    gap: 0;
+    margin-top: 1.6rem;
+}
+.banner-totals div {
+    padding: 0 2rem;
+}
+.banner-totals div:first-child {
+    padding-left: 0;
+}
+.banner-totals div + div {
+    border-left: 1px solid #547167;   /* "div + div" = every total except the first */
+}
+
+.route-print {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 62%;
+    right: 0;
+    z-index: -1;
+    background-image: radial-gradient(#709180 1px, transparent 1px);   
+    background-size: 14px 14px;                                          
+    -webkit-mask-image: linear-gradient(90deg, transparent, black 30%);
+    mask-image: linear-gradient(90deg, transparent, black 30%);          
+}
+.route-print i {
+    position: absolute;
+    width: 140px;
+    height: 74px;
+    top: 55%;
+    left: 22%;
+    transform: rotate(-28deg);
+    border: 2px dashed #adce99;
+    border-width: 2px 2px 0 0;         
+    border-top-right-radius: 28px;    
+}
+.route-print i::before {               
+    content: "";
+    position: absolute;
+    left: -5px;
+    top: -6px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #cdebab;
+    border: 3px solid #315a46;
+}
+.route-print i:nth-child(2) {
+    top: 30%;
+    left: 52%;
+}
+.route-print i:nth-child(3) {
+    top: 7%;
+    left: 80%;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.status-pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.deliveries-page :focus-visible {
+    outline: 3px solid #ba7b1f;
+    outline-offset: 3px;
+}
+
+/*Smaller Devices */
+@media (max-width: 600px) {
+    .deliveries-banner {
+        padding: 1.75rem 1.5rem;
+    }
+    .banner-totals div,
+    .banner-totals div:first-child {
+        padding: 0.2rem 1.25rem 0.2rem 0;   
+    }
+    .banner-totals div + div {
+        border-left: none;
+    }
+    .route-print {
+        left: 75%;
+        opacity: 0.55;
     }
 }
 
@@ -386,17 +527,15 @@ td.number, th.number {
         margin: 0 0 1.5rem;
     }
 
-    /* The business name at the top of the printed invoice */
     .invoice-business {
         margin: 0 0 0.5rem;
         padding-bottom: 0.4rem;
-        border-bottom: 2px solid #1f3a5f;
+        border-bottom: 2px solid #0b6e4f;
         font-size: 20pt;
         font-weight: 700;
-        color: #1f3a5f;
+        color: #0b6e4f;
     }
 
-    /* Keep the grey table headings when printing (browsers drop background colours by default) */
     th {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
@@ -411,5 +550,70 @@ td.number, th.number {
     a {
         color: inherit;
         text-decoration: none;
+    }
+}
+
+/* ---------- Small screens (phones, e.g. a bearer on the road)
+   Everything inside this block ONLY applies when the screen is 600px wide or less.
+   Above that, the rules higher up in this file are used unchanged. */
+
+@media (max-width: 600px) {
+    /* Less empty space around the page, so the content gets the room. */
+    main { 
+        padding: 0.75rem; 
+    }
+    .card { 
+        padding: 1rem; 
+    }
+    .card.narrow { 
+        margin: 1rem auto; 
+    }
+    h1 { 
+        font-size: 1.5rem; 
+    }
+    h2 { 
+        font-size: 1.2rem; 
+    }
+
+    /* Menu: smaller side padding, and each link gets a bigger area to tap. */
+    .topbar { 
+        padding: 0.75rem 1rem; 
+    }
+    .topbar nav { 
+        gap: 0.25rem 0.5rem; 
+        flex-basis: 100%;   /* the menu gets its own full-width line under "Track-It" */
+    }
+    .topbar a { 
+        display: inline-block; 
+        padding: 0.4rem 0.5rem; 
+    }
+
+    /* Form boxes: use the full width. 16px text stops phones zooming in when a box is tapped. */
+    input, select, textarea { 
+        max-width: none; 
+        font-size: 16px; 
+    }
+
+    /* Buttons: full width and taller, so they are easy to hit with a thumb. */
+    button, .button { 
+        display: block; 
+        width: 100%; 
+        text-align: center; 
+        padding: 0.75rem; 
+    }
+
+    /* Wide tables: scroll sideways INSIDE the card instead of stretching the whole page.
+       A minimum column width stops the text being squashed into one word per line. */
+    table { 
+        display: block; 
+        overflow-x: auto; }
+    th, td { 
+        min-width: 7rem; 
+        font-size: 0.95rem; 
+    }
+
+    /* Dropdowns and comment boxes inside a table need some width, or they get squashed. */
+    td select, td textarea, td input { 
+        min-width: 12rem; 
     }
 }
