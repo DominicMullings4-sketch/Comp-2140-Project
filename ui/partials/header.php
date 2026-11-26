@@ -12,8 +12,7 @@ $flash = take_flash();
     <title><?= h($pageTitle) ?> | Track-It</title>
     <link rel="stylesheet" href="ui/css/style.css">
 </head>
-<?php // The Deliveries page uses Terrell's dispatch theme (see "Deliveries page" in ui/css/style.css) ?>
-<body<?= $pageTitle === 'Deliveries' ? ' class="deliveries-page"' : '' ?>>
+<body>
 <header class="topbar">
     <span class="brand">Track-It</span>
 
@@ -23,7 +22,7 @@ $flash = take_flash();
             <a href="customers.php">Customers</a>
             <a href="inventory.php">Inventory</a>
             <a href="stock_receipts.php">Stock Receipts</a>
-            <a href="deliveries.php"<?= $pageTitle === 'Deliveries' ? ' aria-current="page"' : '' ?>>Deliveries</a>
+            <a href="deliveries.php">Deliveries</a>
             <a href="delivery_feedback.php">Delivery Feedback</a>
             <a class="logout" href="login.php?action=logout">Log out (<?= h(AccessControl::currentUsername()) ?>)</a>
         </nav>

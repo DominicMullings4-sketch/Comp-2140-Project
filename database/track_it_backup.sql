@@ -60,7 +60,9 @@ CREATE TABLE `deliveries` (
   `comment` text DEFAULT NULL,
   `assigned_at` datetime DEFAULT NULL,
   `outcome_recorded_at` datetime DEFAULT NULL,
-  `outcome_recorded_by` int(11) DEFAULT NULL
+  `outcome_recorded_by` int(11) DEFAULT NULL,
+  `handed_over_at` datetime DEFAULT NULL,
+  `handed_over_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -350,7 +352,8 @@ ALTER TABLE `users`
 ALTER TABLE `deliveries`
   ADD CONSTRAINT `deliveries_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `deliveries_ibfk_2` FOREIGN KEY (`worker_id`) REFERENCES `users` (`user_id`),
-  ADD CONSTRAINT `deliveries_ibfk_3` FOREIGN KEY (`outcome_recorded_by`) REFERENCES `users` (`user_id`);
+  ADD CONSTRAINT `deliveries_ibfk_3` FOREIGN KEY (`outcome_recorded_by`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `deliveries_ibfk_4` FOREIGN KEY (`handed_over_by`) REFERENCES `users` (`user_id`);
 
 --
 -- Constraints for table `orders`

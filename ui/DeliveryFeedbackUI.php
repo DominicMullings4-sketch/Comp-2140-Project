@@ -11,12 +11,10 @@
 class DeliveryFeedbackUI
 {
     private DeliveryFeedbackService $feedback;
-    private DeliveryService $delivery;
 
     public function __construct()
     {
         $this->feedback = new DeliveryFeedbackService();
-        $this->delivery = new DeliveryService();
     }
 
     /**
@@ -27,7 +25,6 @@ class DeliveryFeedbackUI
     {
         AccessControl::requireRole(User::ROLE_BEARER);  
 
-        $this->delivery->refreshStatuses();   
         $deliveries = $this->feedback->getTodaysDeliveries((int) AccessControl::currentUserId());  
 
         // The only two outcomes a bearer can record (6.2).
@@ -137,7 +134,6 @@ class DeliveryFeedbackUI
         $formAction = 'delivery_feedback.php?status=' . urlencode($statusFilter);
         $outcomes = [Order::STATUS_DELIVERED, Order::STATUS_FAILED];
 
-        $this->delivery->refreshStatuses();                                 // forces statuses to be updated
         $deliveries = $this->feedback->getDeliveries($statusFilter);         // aoolies filter by status
 
         render_header('Delivery Feedback');

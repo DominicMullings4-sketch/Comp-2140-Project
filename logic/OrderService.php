@@ -90,7 +90,7 @@ class OrderService
 
         // PART 5 - save the order, its delivery, its lines and the reduced stock in ONE transaction.
         $now = new DateTime();
-        $deliveryDate = $this->delivery->calculateDeliveryDate($now);   // 5.1, 5.3, 5.4 (your Step 1)
+        $deliveryDate = $this->delivery->calculateDeliveryDate($now);   // Feature 4, SR-4.1: dispatch date from the 10:00 a.m. cutoff
 
         $this->db->beginTransaction();      // Very important as multiple tables are to be updated to complete the transaction.
         try {

@@ -101,7 +101,7 @@ CREATE TABLE order_lines (
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------------------
--- deliveries  (Features 5 and 6)
+-- deliveries  (Features 4 and 6)
 -- One delivery per order (UNIQUE order_id). Created when the order is saved.
 -- -------------------------------------------------------------
 CREATE TABLE deliveries (
@@ -115,9 +115,12 @@ CREATE TABLE deliveries (
     assigned_at          DATETIME NULL,                  -- when the worker was assigned (5.5)
     outcome_recorded_at  DATETIME NULL,                  -- when Delivered / Failed was saved (6.2)
     outcome_recorded_by  INT NULL,                       -- who saved it
+    handed_over_at       DATETIME NULL,                  -- Feature 4 (AC-4.3): when the order was handed to the bearer
+    handed_over_by       INT NULL,                       -- Feature 4 (AC-4.3): the staff member who recorded the handover
     FOREIGN KEY (order_id)            REFERENCES orders(order_id) ON DELETE CASCADE,
     FOREIGN KEY (worker_id)           REFERENCES users(user_id),
-    FOREIGN KEY (outcome_recorded_by) REFERENCES users(user_id)
+    FOREIGN KEY (outcome_recorded_by) REFERENCES users(user_id),
+    FOREIGN KEY (handed_over_by)      REFERENCES users(user_id)
 ) ENGINE=InnoDB;
 
 -- The invoice (4.4) and grand total (4.3) are not stored:

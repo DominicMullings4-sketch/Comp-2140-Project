@@ -24,6 +24,7 @@ class Order
     public string $status = self::STATUS_PENDING;
     public ?int $bearerId = null;         // deliveries.worker_id
     public ?string $deliveryComment = null;   // deliveries.comment
+    public ?string $handedOverAt = null;      // deliveries.handed_over_at (Feature 4, AC-4.3)
 
     /** OrderLine[] */
     public array $lines = [];
@@ -34,6 +35,7 @@ class Order
     public ?string $customerAddress = null;
     public ?string $customerEmail = null;
     public ?string $bearerUsername = null;
+    public ?string $bearerName = null;
 
     // Grand total (4.3): the sum of every line's total.
     public function total(): float
@@ -62,12 +64,14 @@ class Order
         $order->status = $row['status'] ?? self::STATUS_PENDING;
         $order->bearerId = isset($row['worker_id']) ? (int) $row['worker_id'] : null;
         $order->deliveryComment = $row['comment'] ?? null;
+        $order->handedOverAt = $row['handed_over_at'] ?? null;
 
         $order->customerName = $row['customer_name'] ?? null;
         $order->customerPhone = $row['customer_phone'] ?? null;
         $order->customerAddress = $row['customer_address'] ?? null;
         $order->customerEmail = $row['customer_email'] ?? null;
         $order->bearerUsername = $row['bearer_username'] ?? null;
+        $order->bearerName = $row['bearer_name'] ?? null;
         return $order;
     }
 }
