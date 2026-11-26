@@ -126,4 +126,116 @@ class InventoryMgmt
         // TODO (P2): build this method. The note above says what it must do.
         throw new Exception('InventoryMgmt::releaseStock() is not built yet.');
     }
+
+        // ---------------- Store Products (SRS Feature 5, SR-5.1 to SR-5.5) ----------------
+
+    /** SR-5.2, AC-5.1, AC-5.3: validate, then INSERT. The timestamp comes from StockItem. */
+    public function logStockItem($name, ?string $description, $quantity, $rate, string $loggedBy): StockItem
+    {
+        [$name, $quantity, $rate] = $this->validateStockItem($name, $quantity, $rate);
+        $stockItem = new StockItem($name, $description, $quantity, $rate);
+        $this->db->execute(
+            'INSERT INTO stock_items (stock_item_id, item_name, description, quantity, rate, logged_at, logged_by)
+             VALUES (:id, :name, :description, :quantity, :rate, :loggedAt, :loggedBy)',
+            [
+                'id' => $stockItem->getStockItemId(),
+                'name' => $name,
+                'description' => $description,
+                'quantity' => $quantity,
+                'rate' => $rate,
+                'loggedAt' => $stockItem->getLoggedAt(),
+                'loggedBy' => $loggedBy,
+            ]
+        );
+        return $this->getStockItemById($stockItem->getStockItemId());
+    }
+
+    /** SR-5.2, AC-5.2: edit an item. The timestamp cannot be edited (AC-3.3). */
+    public function updateStockItem(string $stockItemId, $name, ?string $description, $quantity, $rate): void
+    {
+        $existing = $this->getStockItemById($stockItemId);
+        if ($existing->isFlagged()) {
+            throw new Exception('A flagged item cannot be edited.');
+        }
+        [$name, $quantity, $rate] = $this->validateStockItem($name, $quantity, $rate);
+        $this->db->execute(
+            'UPDATE stock_items SET item_name = :name, description = :description, quantity = :quantity, rate = :rate
+             WHERE stock_item_id = :id',
+            ['name' => $name, 'description' => $description, 'quantity' => $quantity, 'rate' => $rate, 'id' => $stockItemId]
+        );
+    }
+
+    /** SR-5.1, SR-5.4, AC-5.4: only the owner sees flagged items. @return StockItem[] */
+    public function getStockItems(UserRole $viewerRole): array
+    {
+        $sql = 'SELECT * FROM stock_items';
+        if ($viewerRole != UserRole::BusinessOwner) {
+            $sql .= ' WHERE is_flagged = 0';
+        }
+        $rows = $this->db->select($sql . ' ORDER BY logged_at DESC, item_name', []);
+
+        $items = [];
+        foreach ($rows as $row) {
+            $items[] = StockItem::fromRow($row);
+        }
+        return $items;
+    }
+
+    public function getStockItemById(string $stockItemId): StockItem
+    {
+        $rows = $this->db->select('SELECT * FROM stock_items WHERE stock_item_id = :id', ['id' => $stockItemId]);
+        if (count($rows) == 0) {
+            throw new Exception('Stock item not found.');
+        }
+        return StockItem::fromRow($rows[0]);
+    }
+
+    /** SR-5.4, SF-3: flag an item logged in error. The row stays in the database. */
+    public function flagStockItem(string $stockItemId, string $flaggedBy): void
+    {
+        $this->getStockItemById($stockItemId);   // throws if it does not exist
+        $this->db->execute(
+            'UPDATE stock_items SET is_flagged = 1, flagged_at = :at, flagged_by = :by WHERE stock_item_id = :id',
+            ['at' => now(), 'by' => $flaggedBy, 'id' => $stockItemId]
+        );
+    }
+
+    /**
+     * SR-5.5, AC-5.5: flagged items are never counted. With no dates, counts every item.
+     * 'incoming' = unflagged items logged in the period and not yet taken for delivery.
+     * @param string|null $from Y-m-d   @param string|null $to Y-m-d
+     * @return array{total:int, incoming:int}
+     */
+    public function getStockSummary(?string $from = null, ?string $to = null): array
+    {
+        $where = 'is_flagged = 0';
+        $params = [];
+        if ($from !== null && $to !== null) {
+            $where .= ' AND DATE(logged_at) BETWEEN :from AND :to';
+            $params = ['from' => $from, 'to' => $to];
+        }
+        $rows = $this->db->select(
+            'SELECT COUNT(*) AS total, COALESCE(SUM(taken_for_delivery = 0), 0) AS incoming
+             FROM stock_items WHERE ' . $where,
+            $params
+        );
+        return ['total' => (int) $rows[0]['total'], 'incoming' => (int) $rows[0]['incoming']];
+    }
+
+    /** AC-5.1, TS-5.1B: reject bad input before any SQL runs. */
+    private function validateStockItem($name, $quantity, $rate): array
+    {
+        $name = trim((string) $name);
+        if ($name === '' || mb_strlen($name) > 100) {
+            throw new InvalidArgumentException('Item name is required (100 characters or fewer).');
+        }
+        $quantity = filter_var($quantity, FILTER_VALIDATE_INT);
+        if ($quantity === false || $quantity < 1) {
+            throw new InvalidArgumentException('Quantity must be a whole number of 1 or more.');
+        }
+        if (!is_numeric($rate) || $rate < 0 || $rate > 99999999.99) {
+            throw new InvalidArgumentException('Rate must be a number of 0 or more.');
+        }
+        return [$name, $quantity, round((float) $rate, 2)];
+    }
 }

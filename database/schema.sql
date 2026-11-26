@@ -128,3 +128,23 @@ CREATE TABLE settings (
 ) ENGINE=InnoDB;
 
 INSERT INTO settings (setting_key, setting_value) VALUES ('low_stock_threshold', '5');
+
+-- Store Products (SRS Feature 5, SR-5.1 to SR-5.5). Never deleted (SF-3): flagged instead.
+CREATE TABLE stock_items (
+    stock_item_id      VARCHAR(20)   NOT NULL PRIMARY KEY,
+    item_name          VARCHAR(100)  NOT NULL,
+    description        VARCHAR(255)  NULL,
+    quantity           INT           NOT NULL,
+    rate               DECIMAL(10,2) NOT NULL,
+    total_value        DECIMAL(12,2) AS (quantity * rate) STORED,
+    taken_for_delivery TINYINT(1)    NOT NULL DEFAULT 0,
+    logged_at          DATETIME      NOT NULL,
+    logged_by          VARCHAR(20)   NOT NULL,
+    is_flagged         TINYINT(1)    NOT NULL DEFAULT 0,
+    flagged_at         DATETIME      NULL,
+    flagged_by         VARCHAR(20)   NULL,
+    CONSTRAINT chk_si_quantity CHECK (quantity > 0),
+    CONSTRAINT chk_si_rate     CHECK (rate >= 0),
+    FOREIGN KEY (logged_by)  REFERENCES users (user_id),
+    FOREIGN KEY (flagged_by) REFERENCES users (user_id)
+) ENGINE=InnoDB;

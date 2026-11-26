@@ -35,6 +35,7 @@ require __DIR__ . '/entities/Customer.php';
 require __DIR__ . '/entities/Delivery.php';
 require __DIR__ . '/entities/Invoice.php';
 require __DIR__ . '/entities/Item.php';
+require __DIR__ . '/entities/StockItem.php';
 require __DIR__ . '/entities/Order.php';
 require __DIR__ . '/entities/OrderLine.php';
 require __DIR__ . '/entities/Report.php';
