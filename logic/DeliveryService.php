@@ -17,10 +17,36 @@ class DeliveryService
     private DataAccess $db;
     private UserService $users;
 
+    // True once this page load has checked the deliveries table has the handover columns.
+    private static bool $handoverColumnsChecked = false;
+
     public function __construct()
     {
         $this->db = new DataAccess();
         $this->users = new UserService();
+        $this->addHandoverColumnsIfMissing();
+    }
+
+    /**
+     * AC-4.3 stores the handover in two columns: handed_over_at and handed_over_by.
+     * A database imported before Feature 4 was finished doesn't have them, so they are added
+     * here the first time it's needed. Nobody has to re-import the database.
+     * Once the columns exist, this only runs two quick SHOW COLUMNS checks per page load.
+     */
+    private function addHandoverColumnsIfMissing(): void
+    {
+        if (self::$handoverColumnsChecked) {
+            return;
+        }
+
+        if (count($this->db->select("SHOW COLUMNS FROM deliveries LIKE 'handed_over_at'", [])) === 0) {
+            $this->db->execute('ALTER TABLE deliveries ADD COLUMN handed_over_at DATETIME NULL', []);
+        }
+        if (count($this->db->select("SHOW COLUMNS FROM deliveries LIKE 'handed_over_by'", [])) === 0) {
+            $this->db->execute('ALTER TABLE deliveries ADD COLUMN handed_over_by INT NULL', []);
+        }
+
+        self::$handoverColumnsChecked = true;
     }
 
     /**
