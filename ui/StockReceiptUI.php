@@ -109,12 +109,14 @@ class StockReceiptUI
                         <th>Receipt #</th>
                         <th>Date received</th>
                         <th>Supplier</th>
+                        <th>Entered By</th>
                     </tr>
                     <?php foreach ($receipts as $r): ?>
                         <tr>
-                            <td><a href="stock_receipts.php?action=view&amp;id=<?= h($r->id) ?>">#<?= h($r->id) ?></a></td>
+                            <td><a href="stock_receipts.php?action=view&amp;id=<?= h($r->id) ?>">#ORD-<?= h($r->id) ?></a></td>
                             <td><?= h($r->dateReceived) ?></td>
                             <td><?= h($r->supplierName) ?></td>
+                            <td><?= h('EMP-'.$r->enteredBy) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </table>
@@ -148,6 +150,7 @@ class StockReceiptUI
                 <tr><th>Supplier</th><td><?= h($receipt->supplierName) ?></td></tr>
                 <tr><th>Date received</th><td><?= h($receipt->dateReceived) ?></td></tr>
                 <tr><th>Recorded at</th><td><?= h($receipt->createdAt) ?></td></tr>
+                <tr><th>Entered by</th><td><?= h("EMP-".$receipt->enteredBy) ?></td></tr>
             </table>
         </section>
 

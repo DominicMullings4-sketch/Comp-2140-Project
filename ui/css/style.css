@@ -88,19 +88,46 @@ button, .button {
     text-decoration: none;
     cursor: pointer;
 }
-button:hover, .button:hover { background: #2b5283; }
-.button.secondary { background: #6b7785; }
+button:hover, .button:hover { 
+    background: #2b5283; 
+}
+.button.secondary { 
+    background: #6b7785; 
+}
 
 /* ---------- Tables */
-table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #e4e8ec; vertical-align: top; }
-th { background: #eef2f6; }
-td.number, th.number { text-align: right; }
+table {
+     width: 100%;
+      border-collapse: collapse; 
+    }
+th, td { 
+    text-align: left; 
+    padding: 0.5rem; 
+    border-bottom: 1px solid #e4e8ec; 
+    vertical-align: top; 
+}
+th { 
+    background: #eef2f6; 
+}
+td.number, th.number { 
+    text-align: right; 
+}
 
 /* ---------- Messages (set_flash, form errors) */
-.flash { padding: 0.75rem 1rem; border-radius: 4px; margin: 0 0 1rem; list-style-position: inside; }
-.flash.success { background: #e3f4e8; color: #1d6b35; }
-.flash.error   { background: #fde8e8; color: #9b1c1c; }
+.flash { 
+    padding: 0.75rem 1rem; 
+    border-radius: 4px; 
+    margin: 0 0 1rem; 
+    list-style-position: inside; 
+}
+.flash.success { 
+    background: #e3f4e8; 
+    color: #1d6b35; 
+}
+.flash.error   { 
+    background: #fde8e8; 
+    color: #9b1c1c; 
+}
 
 /* ---------- Small screens (phones, e.g. a bearer on the road)
    Everything inside this block ONLY applies when the screen is 600px wide or less.
@@ -286,13 +313,25 @@ td.number, th.number { text-align: right; }
     font-size: 0.8rem;
     font-weight: 600;
 }
-.status-pending   { background: #fff0c6; color: #714c08; }
-.status-out       { background: #dbe7f5; color: #1f3a5f; }
-.status-delivered { background: #e3f4e8; color: #1d6b35; }
-.status-failed    { background: #fde8e8; color: #9b1c1c; }
+.status-pending   { 
+    background: #fff0c6; 
+    color: #714c08; 
+}
+.status-out       { 
+    background: #dbe7f5; color: 
+    #1f3a5f; 
+}
+.status-delivered {
+     background: #e3f4e8; 
+     color: #1d6b35; 
+    }
+.status-failed    { 
+    background: #fde8e8; 
+    color: #9b1c1c; 
+}
 
 /* Phones: one column, date picker above the orders, Assign form stacked */
-@media (max-width: 700px) {
+@media (max-width: 600px) {
     .deliveries-layout {
         grid-template-columns: 1fr;
     }
