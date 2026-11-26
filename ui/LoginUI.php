@@ -2,7 +2,6 @@
 
 /**
  * LoginUI: User Interface layer. The sign-in screens.
- * Already built (foundation), from the team's original LoginUI.
  *
  * login.php                -> showLoginForm()  / submitCredentials()
  * login.php?action=code    -> showCodeForm()   / submitCode()      (only when USE_TWO_FACTOR is true)
