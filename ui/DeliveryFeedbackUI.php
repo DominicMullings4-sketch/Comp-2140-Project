@@ -65,6 +65,9 @@ class DeliveryFeedbackUI
                             <td><?= h($d->customerAddress) ?></td>
                             <td><?= h($d->status) ?></td>
                             <td>
+                                <?php if ($d->status === Order::STATUS_PENDING): ?>
+                                    Awaiting handover by office staff
+                                <?php else: ?>
                                 <!-- One small form per delivery: which order (hidden) + outcome + comment. -->
                                 <form method="post" action="my_deliveries.php">
                                     <input type="hidden" name="order_id" value="<?= h($d->id) ?>">
@@ -83,6 +86,7 @@ class DeliveryFeedbackUI
 
                                     <button type="submit"><?= in_array($d->status, $outcomes, true) ? 'Update' : 'Save' ?></button>
                                 </form>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -191,6 +195,8 @@ class DeliveryFeedbackUI
                             <td>
                                 <?php if ($d->bearerId === null): ?>
                                     Assign a bearer first
+                                <?php elseif ($d->status === Order::STATUS_PENDING): ?>
+                                    Record handover on the Deliveries page first
                                 <?php else: ?>
                                     <!-- Same form as the bearer page: which order (hidden) + outcome + comment. -->
                                     <form method="post" action="<?= h($formAction) ?>">

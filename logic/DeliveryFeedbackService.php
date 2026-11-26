@@ -64,8 +64,8 @@ class DeliveryFeedbackService
         // Check 2: which deliveries this user may update.
         // Both: the delivery must exist and have a bearer assigned.
         // A bearer: it must also be assigned to them.
-        $where = 'WHERE order_id = :id AND worker_id IS NOT NULL';
-        $whereParams = ['id' => $orderId];
+        $where = 'WHERE order_id = :id AND worker_id IS NOT NULL AND status <> :pending';
+        $whereParams = ['id' => $orderId, 'pending' => Order::STATUS_PENDING];
         if (!$isStaff) {
             $where .= ' AND worker_id = :bearer';
             $whereParams['bearer'] = $userId;
@@ -77,8 +77,8 @@ class DeliveryFeedbackService
             $matches = $this->db->select('SELECT delivery_id FROM deliveries ' . $where, $whereParams);
             if (count($matches) === 0) {
                 $errors[] = $isStaff
-                    ? 'That delivery was not found or has no bearer assigned yet.'
-                    : 'That delivery is not assigned to you.';
+                    ? 'That delivery was not found or has not been handed over yet.'
+                    : 'That delivery is not assigned to you or has not been handed over yet.';
             }
         }
 

@@ -219,6 +219,11 @@ class DeliveryService
      */
     public function recordHandover(int $orderId, int $recordedBy): array
     {
+        $recorder = $this->users->getUser($recordedBy);
+        if ($recorder === null || $recorder->role !== User::ROLE_STAFF) {
+            return ['Only office staff can record a delivery handover.'];
+        }
+
         $delivery = $this->findDelivery($orderId);
         if ($delivery === null) {
             return ['That order was not found.'];

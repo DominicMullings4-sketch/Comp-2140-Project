@@ -39,14 +39,14 @@ class InventoryService
         }
     }
 
-    public function getProductIdByName(string $name): ?Product
+    public function getProductIdByName(string $name): ?int
     {
          $rows = $this->db->select('SELECT item_id FROM items WHERE name = :name', ['name'=>$name]);
         
         if (count($rows) == 0){
             return null;
         } else {
-            return $rows[0];
+            return (int) $rows[0]['item_id'];
         }
     }
 

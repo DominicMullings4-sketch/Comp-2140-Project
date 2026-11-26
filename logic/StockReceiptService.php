@@ -29,7 +29,8 @@ class StockReceiptService
         }
         if ($dateReceived === '') {
             $errors[] = 'Date received is required.';
-        } elseif (DateTime::createFromFormat('Y-m-d', $dateReceived) === false) {
+        } elseif (($parsedDate = DateTime::createFromFormat('!Y-m-d', $dateReceived)) === false
+            || $parsedDate->format('Y-m-d') !== $dateReceived) {
             $errors[] = 'Date received is not a valid date.';
         }
 
