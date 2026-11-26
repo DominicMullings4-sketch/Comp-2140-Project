@@ -1,0 +1,376 @@
+/* Track-It: one simple stylesheet for every page. Works on phones and laptops. */
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #1f2933;
+    background: #f4f6f8;
+}
+
+/* ---------- Top bar and menu */
+.topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.5rem;
+    padding: 0.75rem 1.5rem;
+    background: #1f3a5f;
+    color: #fff;
+}
+.brand { 
+    font-weight: 700; 
+    font-size: 1.2rem; 
+}
+.topbar nav { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 0.25rem 1rem; 
+}
+.topbar a { 
+    color: #dbe7f5; 
+    text-decoration: none; 
+}
+.topbar a:hover { 
+    color: #fff; 
+    text-decoration: underline;
+ }
+
+/* ---------- Page area */
+main { 
+    max-width: 1000px; 
+    margin: 0 auto; 
+    padding: 1.5rem; 
+}
+
+h1 { 
+    margin-top: 0.5rem; 
+}
+
+.card {
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.card.narrow { 
+    max-width: 420px; 
+    margin: 2rem auto; 
+}
+
+.card.todo { 
+    border-left: 4px solid #e0a100; 
+}
+
+/* ---------- Forms */
+label { display: block; font-weight: 600; margin: 0.75rem 0 0.25rem; }
+input, select, textarea {
+    width: 100%;
+    max-width: 420px;
+    padding: 0.5rem;
+    font: inherit;
+    border: 1px solid #b8c2cc;
+    border-radius: 4px;
+}
+button, .button {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.5rem 1.1rem;
+    font: inherit;
+    color: #fff;
+    background: #1f3a5f;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+}
+button:hover, .button:hover { background: #2b5283; }
+.button.secondary { background: #6b7785; }
+
+/* ---------- Tables */
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #e4e8ec; vertical-align: top; }
+th { background: #eef2f6; }
+td.number, th.number { text-align: right; }
+
+/* ---------- Messages (set_flash, form errors) */
+.flash { padding: 0.75rem 1rem; border-radius: 4px; margin: 0 0 1rem; list-style-position: inside; }
+.flash.success { background: #e3f4e8; color: #1d6b35; }
+.flash.error   { background: #fde8e8; color: #9b1c1c; }
+
+/* ---------- Small screens (phones, e.g. a bearer on the road)
+   Everything inside this block ONLY applies when the screen is 600px wide or less.
+   Above that, the rules higher up in this file are used unchanged. */
+
+@media (max-width: 600px) {
+    /* Less empty space around the page, so the content gets the room. */
+    main { 
+        padding: 0.75rem; 
+    }
+    .card { 
+        padding: 1rem; 
+    }
+    .card.narrow { 
+        margin: 1rem auto; 
+    }
+    h1 { 
+        font-size: 1.5rem; 
+    }
+    h2 { 
+        font-size: 1.2rem; 
+    }
+
+    /* Menu: smaller side padding, and each link gets a bigger area to tap. */
+    .topbar { 
+        padding: 0.75rem 1rem; 
+    }
+    .topbar nav { 
+        gap: 0.25rem 0.5rem; 
+    }
+    .topbar a { 
+        display: inline-block; 
+        padding: 0.4rem 0.5rem; 
+    }
+
+    /* Form boxes: use the full width. 16px text stops phones zooming in when a box is tapped. */
+    input, select, textarea { 
+        max-width: none; 
+        font-size: 16px; 
+    }
+
+    /* Buttons: full width and taller, so they are easy to hit with a thumb. */
+    button, .button { 
+        display: block; 
+        width: 100%; 
+        text-align: center; 
+        padding: 0.75rem; 
+    }
+
+    /* Wide tables: scroll sideways INSIDE the card instead of stretching the whole page.
+       A minimum column width stops the text being squashed into one word per line. */
+    table { 
+        display: block; 
+        overflow-x: auto; }
+    th, td { 
+        min-width: 7rem; 
+        font-size: 0.95rem; 
+    }
+
+    /* Dropdowns and comment boxes inside a table need some width, or they get squashed. */
+    td select, td textarea, td input { 
+        min-width: 12rem; 
+    }
+}
+
+/* ---------- Deliveries page (DeliveryUI::showDeliveries)
+   Banner with the date and totals, one card per order, date picker on the right.
+   These class names are only used on deliveries.php, so other pages are not affected. */
+
+/* Banner: dark blue box at the top of the page */
+.deliveries-banner {
+    background: #1f3a5f;
+    color: #fff;
+    border-radius: 12px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+}
+.deliveries-banner h1 {
+    margin: 0;
+    font-size: 2.2rem;
+}
+.banner-date {
+    margin: 0 0 0.25rem;
+    color: #b9cde6;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.banner-totals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin-top: 1rem;
+    color: #dbe7f5;
+}
+.total-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin-right: 0.3rem;
+}
+
+/* Two columns: order cards (wide, left) and the date picker (narrow, right) */
+.deliveries-layout {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 1.5rem;
+    align-items: start;
+}
+.deliveries-layout h2 {
+    margin-top: 0;
+}
+
+/* The small grey bubble with the number of orders */
+.count {
+    display: inline-block;
+    padding: 0.1rem 0.6rem;
+    background: #dde3ea;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    vertical-align: middle;
+}
+
+/* One card per order */
+.order-card {
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    overflow: hidden;   /* keeps the grey action strip inside the rounded corners */
+}
+.order-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem 0;
+}
+.order-number {
+    font-family: Consolas, Menlo, monospace;
+    font-size: 0.85rem;
+    color: #6b7785;
+}
+.order-card h3 {
+    margin: 0.4rem 1.25rem 0.75rem;
+    font-size: 1.35rem;
+}
+.order-card-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2.5rem;
+    padding: 0 1.25rem 1rem;
+}
+.detail-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6b7785;
+}
+
+/* Grey strip at the bottom of each card with the Assign form */
+.order-card-actions {
+    background: #eef2f6;
+    border-top: 1px solid #dde3ea;
+    padding: 0.75rem 1.25rem;
+}
+.assign-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.assign-row button {
+    margin-top: 0;   /* the general button rule adds space above; not needed in a row */
+}
+.done-note {
+    margin: 0;
+    color: #6b7785;
+}
+
+/* Coloured status labels (the class is chosen in showDeliveries) */
+.status-pill {
+    padding: 0.2rem 0.7rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.status-pending   { background: #fff0c6; color: #714c08; }
+.status-out       { background: #dbe7f5; color: #1f3a5f; }
+.status-delivered { background: #e3f4e8; color: #1d6b35; }
+.status-failed    { background: #fde8e8; color: #9b1c1c; }
+
+/* Phones: one column, date picker above the orders, Assign form stacked */
+@media (max-width: 700px) {
+    .deliveries-layout {
+        grid-template-columns: 1fr;
+    }
+    .date-panel {
+        order: -1;   /* show the date picker first on small screens */
+    }
+    .deliveries-banner h1 {
+        font-size: 1.7rem;
+    }
+    .assign-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* ---------- Printing (the invoice's "Print invoice" button, or Ctrl + P on any page)
+   The browser uses these rules instead of the screen look when printing or saving as PDF.
+   .no-print   = hide this on paper (menus, links, buttons)
+   .print-only = show this ONLY on paper (hidden on screen by the first rule) */
+
+.print-only {
+    display: none;
+}
+
+@page {
+    margin: 1.5cm;   /* white space around the edge of every printed page */
+}
+
+@media print {
+    /* Hide the things that only make sense on screen */
+    .topbar, .flash, .no-print, button, .button {
+        display: none;
+    }
+    .print-only {
+        display: block;
+    }
+
+    /* Plain white page, full width, no boxes around the sections */
+    body {
+        background: #fff;
+        font-size: 11pt;
+    }
+    main {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+    .card {
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        margin: 0 0 1.5rem;
+    }
+
+    /* The business name at the top of the printed invoice */
+    .invoice-business {
+        margin: 0 0 0.5rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 2px solid #1f3a5f;
+        font-size: 20pt;
+        font-weight: 700;
+        color: #1f3a5f;
+    }
+
+    /* Keep the grey table headings when printing (browsers drop background colours by default) */
+    th {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Don't split one table row across two pages */
+    tr {
+        break-inside: avoid;
+    }
+
+    /* Links print as normal text */
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
+}

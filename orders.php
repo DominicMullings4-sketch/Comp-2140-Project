@@ -1,26 +1,17 @@
 <?php
-// Features 3 and 4: Manage Orders, Invoices and Confirm Orders. Builder: P4.
+// Feature 4: Record Orders (staff's home page).
 // This page only decides WHICH OrderUI method to call. OrderUI does the work.
-require __DIR__ . '/src/bootstrap.php';
+require __DIR__ . '/bootstrap.php';
 
-$action = $_GET['action'] ?? 'list';
-$formWasSent = ($_SERVER['REQUEST_METHOD'] == 'POST');
-$orderId = $_POST['order'] ?? $_GET['order'] ?? '';
+$ui = new OrderUI();
+$action = $_GET['action'] ?? 'new';
 
-if ($action == 'new') {
-    if ($formWasSent) {
-        $orderUI->submitOrder($_POST);
-    } else {
-        $orderUI->showNewOrderForm($_GET['customer'] ?? '');
-    }
-} elseif ($action == 'cancel') {
-    $orderUI->submitCancel($orderId);
-} elseif ($action == 'invoice') {
-    $orderUI->submitGenerateInvoice($orderId);
-} elseif ($action == 'confirm') {
-    $orderUI->submitConfirm($orderId);
-} elseif ($action == 'pdf') {
-    $orderUI->downloadInvoice($orderId);
+if ($action === 'invoice') {
+    $ui->showInvoice((int) ($_GET['id'] ?? 0));          // orders.php?action=invoice&id=12
+} elseif ($action === 'customer') {
+    $ui->showCustomerOrders((int) ($_GET['id'] ?? 0));   // orders.php?action=customer&id=3
+} elseif (is_post()) {
+    $ui->submitOrder($_POST);
 } else {
-    $orderUI->showOrders();
+    $ui->showOrderForm();
 }

@@ -1,15 +1,3 @@
-# Each person's own settings (database password, encryption key): never commit.
+# Each person's own settings (database password etc.)
 config/config.php
-
-# README file
-README.md
-
-# Generated files
-/storage/
-*.log
-
-# Editor and OS files
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
+

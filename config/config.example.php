@@ -1,23 +1,19 @@
 <?php
-// Copy this file to config/config.php and fill in your own values.
-// config.php is ignored by Git, so passwords and keys never reach GitHub.
+// Copy this file to config/config.php and change the values if yours differ.
+// config.php is ignored by Git, so your own settings never get pushed.
 
-// Database (same settings as the PDO connection in INFO2180 Lab 5)
-define('DB_HOST', 'localhost');      // For Azure: trackit-db.mysql.database.azure.com
-define('DB_NAME', 'trackit');
-define('DB_USER', 'root');           // XAMPP's default user. For Azure: trackitadmin
-define('DB_PASSWORD', '');           // XAMPP's default is empty. For Azure: the admin password
-define('DB_SSL_CA', '');             // Azure only: full path to the certificate file (see README)
+// Database. These values already match a default XAMPP install.
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'track_it');
+define('DB_USER', 'root');
+define('DB_PASSWORD', '');
 
-// Team key for DataAccess::encrypt(). Everyone must use the SAME value (see README).
-define('ENCRYPTION_KEY', '');
-
-// Local time, used by SR-5.5's 10:00 AM rule.
+// Local time zone. Feature 5 uses it for the 10:00 AM delivery-date rule.
 define('TIMEZONE', 'America/Jamaica');
 
 // Show PHP errors in the browser while building. Set to false for the demo.
 define('SHOW_ERRORS', true);
 
-// Until the login page is built, you are signed in automatically as this test user.
-// Use 'owner', 'staff', 'driver1' or 'driver2' to test each role. Set to '' for the demo.
-define('DEV_AUTO_LOGIN', 'owner');
+// Two-factor sign-in with an authenticator app.
+// false while building (password only), true for the demo.
+define('USE_TWO_FACTOR', false);

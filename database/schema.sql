@@ -1,130 +1,124 @@
--- Track-It database tables, one per entity class on the EntityClasses diagram.
--- Works on XAMPP's MySQL/MariaDB and on the Azure MySQL 8.4 server.
--- Import in phpMyAdmin (Import tab), or run: mysql -u root < database/schema.sql
+-- =============================================================
+-- Track-It database schema (simplified scope, 6 features)
+-- phpMyAdmin -> Import -> choose this file -> Import.
+-- Running it again DELETES all Track-It data and starts fresh.
 --
--- Track-It never deletes records (SF-3), so foreign keys block deletes by default.
+-- Table and column names follow the class diagram:
+-- items (not products), and every table's key is named <table>_id
+-- (user_id, item_id, customer_id, order_id, receipt_id, line_id, delivery_id).
+-- =============================================================
 
-CREATE DATABASE IF NOT EXISTS trackit CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE trackit;
+DROP DATABASE IF EXISTS track_it;
+CREATE DATABASE track_it CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE track_it;
 
--- User (SC-1, SC-2, SC-3)
+-- -------------------------------------------------------------
+-- users  (pre-loaded accounts; there is no add-user feature)
+-- role is 'OfficeStaff' or 'DeliveryWorker' (User::ROLE_STAFF / User::ROLE_BEARER in PHP)
+-- -------------------------------------------------------------
 CREATE TABLE users (
-    user_id           VARCHAR(20)  NOT NULL PRIMARY KEY,
-    name              VARCHAR(100) NOT NULL,
-    username          VARCHAR(50)  NOT NULL UNIQUE,
-    email             VARCHAR(255) NOT NULL,
-    password_hash     VARCHAR(255) NOT NULL,            -- never the plain password (SC-3)
-    two_factor_secret VARCHAR(255) NULL,
-    role              VARCHAR(20)  NOT NULL,            -- UserRole: BusinessOwner | OfficeStaff | DeliveryWorker
-    status            VARCHAR(20)  NOT NULL DEFAULT 'Active'   -- UserStatus: Active | Inactive
+    user_id            INT AUTO_INCREMENT PRIMARY KEY,
+    name               VARCHAR(100) NOT NULL,
+    username           VARCHAR(50)  NOT NULL UNIQUE,
+    password_hash      VARCHAR(255) NOT NULL,           -- from PHP password_hash(), never the plain password
+    two_factor_secret  VARCHAR(100) NULL,               -- set the first time the user signs in with 2FA on
+    role               VARCHAR(20)  NOT NULL
 ) ENGINE=InnoDB;
 
--- Customer (Feature 2)
-CREATE TABLE customers (
-    customer_id         VARCHAR(20)  NOT NULL PRIMARY KEY,
-    name                VARCHAR(100) NOT NULL,
-    phone               VARCHAR(10)  NOT NULL,          -- exactly 10 digits (SR-2.4)
-    address             VARCHAR(255) NOT NULL,
-    social_media_handle VARCHAR(100) NULL,
-    INDEX idx_customers_name (name),
-    INDEX idx_customers_phone (phone)
-) ENGINE=InnoDB;
-
--- Supplier (SR-1.8, SR-1.9)
-CREATE TABLE suppliers (
-    supplier_id   VARCHAR(20)  NOT NULL PRIMARY KEY,
-    name          VARCHAR(100) NOT NULL UNIQUE,
-    city          VARCHAR(100) NOT NULL,
-    country       VARCHAR(100) NOT NULL,
-    contact_name  VARCHAR(100) NULL,
-    contact_phone VARCHAR(30)  NULL
-) ENGINE=InnoDB;
-
--- Item (SR-1.4, SR-1.5, SR-3.6)
+-- -------------------------------------------------------------
+-- items  (Feature 2: view / edit / add inventory items)
+-- -------------------------------------------------------------
 CREATE TABLE items (
-    item_id           VARCHAR(20)   NOT NULL PRIMARY KEY,
-    name              VARCHAR(100)  NOT NULL UNIQUE,
-    selling_price     DECIMAL(10,2) NOT NULL,
-    stock_quantity    INT           NOT NULL DEFAULT 0,
-    reserved_quantity INT           NOT NULL DEFAULT 0,
-    CONSTRAINT chk_items_price    CHECK (selling_price >= 0),
-    CONSTRAINT chk_items_stock    CHECK (stock_quantity >= 0),
-    CONSTRAINT chk_items_reserved CHECK (reserved_quantity >= 0)
+    item_id            INT AUTO_INCREMENT PRIMARY KEY,
+    name               VARCHAR(100) NOT NULL UNIQUE,         -- unique so the dropdowns have no duplicates
+    stock_quantity     INT NOT NULL DEFAULT 0 CHECK (stock_quantity >= 0),
+    reserved_quantity  INT NOT NULL DEFAULT 0 CHECK (reserved_quantity >= 0),
+    selling_price      DECIMAL(10,2) NOT NULL CHECK (selling_price >= 0)
 ) ENGINE=InnoDB;
 
--- StockReceipt (SR-1.1, SR-1.6, SR-1.7)
+-- -------------------------------------------------------------
+-- stock_receipts  (Feature 1: receipt header)
+-- receipt_id = the unique identifier required by 1.5
+-- -------------------------------------------------------------
 CREATE TABLE stock_receipts (
-    receipt_id    VARCHAR(20) NOT NULL PRIMARY KEY,
-    supplier_id   VARCHAR(20) NOT NULL,
-    date_received DATE        NOT NULL,
-    entered_at    DATETIME    NOT NULL,
-    entered_by    VARCHAR(20) NOT NULL,
-    FOREIGN KEY (supplier_id) REFERENCES suppliers (supplier_id),
-    FOREIGN KEY (entered_by)  REFERENCES users (user_id)
+    receipt_id     INT AUTO_INCREMENT PRIMARY KEY,
+    supplier_name  VARCHAR(100) NOT NULL,
+    date_received  DATE NOT NULL,
+    entered_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    entered_by     INT NOT NULL,                         -- the signed-in user who recorded it
+    FOREIGN KEY (entered_by) REFERENCES users(user_id)
 ) ENGINE=InnoDB;
 
--- StockReceiptLine (composition: belongs to one stock receipt)
+-- -------------------------------------------------------------
+-- stock_receipt_lines  (the items received on each receipt)
+-- -------------------------------------------------------------
 CREATE TABLE stock_receipt_lines (
-    line_id           INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    receipt_id        VARCHAR(20)   NOT NULL,
-    item_id           VARCHAR(20)   NOT NULL,
-    quantity_received INT           NOT NULL,
-    unit_cost_price   DECIMAL(10,2) NOT NULL,
-    CONSTRAINT chk_srl_quantity CHECK (quantity_received > 0),   -- SR-1.3
-    CONSTRAINT chk_srl_cost     CHECK (unit_cost_price >= 0),    -- SR-1.10
-    FOREIGN KEY (receipt_id) REFERENCES stock_receipts (receipt_id),
-    FOREIGN KEY (item_id)    REFERENCES items (item_id)
+    line_id            INT AUTO_INCREMENT PRIMARY KEY,
+    receipt_id         INT NOT NULL,
+    item_id            INT NOT NULL,                     -- chosen from the item dropdown
+    quantity_received  INT NOT NULL CHECK (quantity_received >= 1),        -- 1.3
+    unit_cost_price    DECIMAL(10,2) NOT NULL CHECK (unit_cost_price >= 0), -- what the supplier charged per unit
+    FOREIGN KEY (receipt_id) REFERENCES stock_receipts(receipt_id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id)    REFERENCES items(item_id)
 ) ENGINE=InnoDB;
 
--- Order (Feature 3)
+-- -------------------------------------------------------------
+-- customers  (Feature 3)
+-- UNIQUE on phone and email backs up 3.2 at the database level
+-- -------------------------------------------------------------
+CREATE TABLE customers (
+    customer_id       INT AUTO_INCREMENT PRIMARY KEY,
+    name              VARCHAR(100) NOT NULL,
+    delivery_address  VARCHAR(255) NOT NULL,
+    phone             VARCHAR(20)  NOT NULL UNIQUE,
+    email             VARCHAR(100) NOT NULL UNIQUE
+) ENGINE=InnoDB;
+
+-- -------------------------------------------------------------
+-- orders  (Feature 4)
+-- The delivery details are in the deliveries table below.
+-- -------------------------------------------------------------
 CREATE TABLE orders (
-    order_id     VARCHAR(20) NOT NULL PRIMARY KEY,
-    customer_id  VARCHAR(20) NOT NULL,
-    order_source VARCHAR(20) NULL,                     -- OrderSource, optional (SR-3.1)
-    entered_at   DATETIME    NOT NULL,
-    order_status VARCHAR(30) NOT NULL,                 -- OrderStatus
-    FOREIGN KEY (customer_id) REFERENCES customers (customer_id)
+    order_id     INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id  INT NOT NULL,                                     -- 4.6 order linked to customer
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,      -- used for the 10:00 AM rule
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
 ) ENGINE=InnoDB;
 
--- OrderLine (composition: belongs to one order). unit_price is frozen when ordered (SR-4.5).
+-- -------------------------------------------------------------
+-- order_lines  (the items inside each order)
+-- unit_price is copied from items when the order is saved,
+-- so old invoices don't change when a price is edited (2.2).
+-- -------------------------------------------------------------
 CREATE TABLE order_lines (
-    line_id          INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    order_id         VARCHAR(20)   NOT NULL,
-    item_id          VARCHAR(20)   NOT NULL,
-    quantity_ordered INT           NOT NULL,
-    unit_price       DECIMAL(10,2) NOT NULL,
-    CONSTRAINT chk_ol_quantity CHECK (quantity_ordered > 0),     -- SR-3.3
-    FOREIGN KEY (order_id) REFERENCES orders (order_id),
-    FOREIGN KEY (item_id)  REFERENCES items (item_id)
+    line_id           INT AUTO_INCREMENT PRIMARY KEY,
+    order_id          INT NOT NULL,
+    item_id           INT NOT NULL,
+    quantity_ordered  INT NOT NULL CHECK (quantity_ordered >= 1),    -- 4.2 (the stock check is done in PHP)
+    unit_price        DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id)  REFERENCES items(item_id)
 ) ENGINE=InnoDB;
 
--- Invoice (Feature 4): at most one per order (SR-4.1)
-CREATE TABLE invoices (
-    invoice_number VARCHAR(30) NOT NULL PRIMARY KEY,
-    order_id       VARCHAR(20) NOT NULL UNIQUE,
-    status         VARCHAR(10) NOT NULL DEFAULT 'Active',   -- InvoiceStatus: Active | Void
-    FOREIGN KEY (order_id) REFERENCES orders (order_id)
-) ENGINE=InnoDB;
-
--- Delivery (Features 5 and 6). Every assignment is kept, including failed ones (SR-5.7).
+-- -------------------------------------------------------------
+-- deliveries  (Features 5 and 6)
+-- One delivery per order (UNIQUE order_id). Created when the order is saved.
+-- -------------------------------------------------------------
 CREATE TABLE deliveries (
-    delivery_id         VARCHAR(20) NOT NULL PRIMARY KEY,
-    order_id            VARCHAR(20) NOT NULL,
-    worker_id           VARCHAR(20) NOT NULL,
-    delivery_date       DATE        NOT NULL,
-    status              VARCHAR(20) NOT NULL,          -- DeliveryStatus
-    outcome_recorded_at DATETIME    NULL,              -- SR-6.6
-    outcome_recorded_by VARCHAR(20) NULL,              -- SR-6.6
-    assigned_at         DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,   -- order of assignments; database only
-    FOREIGN KEY (order_id)            REFERENCES orders (order_id),
-    FOREIGN KEY (worker_id)           REFERENCES users (user_id),
-    FOREIGN KEY (outcome_recorded_by) REFERENCES users (user_id)
+    delivery_id          INT AUTO_INCREMENT PRIMARY KEY,
+    order_id             INT NOT NULL UNIQUE,
+    worker_id            INT NULL,                       -- 5.5 (empty until a delivery worker is assigned)
+    delivery_date        DATE NOT NULL,                  -- 5.1, 5.3, 5.4
+    status               ENUM('Pending', 'Out for delivery', 'Delivered', 'Failed')
+                         NOT NULL DEFAULT 'Pending',     -- 5.2
+    comment              TEXT NULL,                      -- 6.3
+    assigned_at          DATETIME NULL,                  -- when the worker was assigned (5.5)
+    outcome_recorded_at  DATETIME NULL,                  -- when Delivered / Failed was saved (6.2)
+    outcome_recorded_by  INT NULL,                       -- who saved it
+    FOREIGN KEY (order_id)            REFERENCES orders(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (worker_id)           REFERENCES users(user_id),
+    FOREIGN KEY (outcome_recorded_by) REFERENCES users(user_id)
 ) ENGINE=InnoDB;
 
--- Settings such as the low-stock threshold (SR-7.5)
-CREATE TABLE settings (
-    setting_key   VARCHAR(50)  NOT NULL PRIMARY KEY,
-    setting_value VARCHAR(255) NOT NULL
-) ENGINE=InnoDB;
-
-INSERT INTO settings (setting_key, setting_value) VALUES ('low_stock_threshold', '5');
+-- The invoice (4.4) and grand total (4.3) are not stored:
+-- they are built from orders + order_lines + customers when needed.

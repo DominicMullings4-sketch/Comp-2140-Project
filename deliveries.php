@@ -1,18 +1,12 @@
 <?php
-// Features 5 and 6: Assign Deliveries and Confirm Delivery. Builder: P5.
+// Feature 5: Confirm Delivery (staff assign bearers).
 // This page only decides WHICH DeliveryUI method to call. DeliveryUI does the work.
-require __DIR__ . '/src/bootstrap.php';
+require __DIR__ . '/bootstrap.php';
 
-$action = $_GET['action'] ?? 'awaiting';
+$ui = new DeliveryUI();
 
-if ($action == 'assign') {
-    $deliveryUI->submitAssignment($_POST['order'], $_POST['worker'], $_POST['date']);
-} elseif ($action == 'today') {
-    $deliveryUI->showTodaysDeliveries();
-} elseif ($action == 'completed') {
-    $deliveryUI->submitCompleted($_POST['delivery']);
-} elseif ($action == 'failed') {
-    $deliveryUI->submitFailed($_POST['delivery']);
+if (is_post()) {
+    $ui->submitAssignment($_POST);
 } else {
-    $deliveryUI->showAwaitingAssignment();
+    $ui->showDeliveries();
 }

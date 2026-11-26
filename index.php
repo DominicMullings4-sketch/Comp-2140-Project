@@ -1,13 +1,9 @@
 <?php
-// Home page: sends each user to their starting page.
-require __DIR__ . '/src/bootstrap.php';
+// The front door: http://localhost/Comp-2140-Project/
+// Not signed in -> the sign-in page. Signed in -> the home page for your role.
+require __DIR__ . '/bootstrap.php';
 
-$user = $userPermission->getCurrentUser();
-
-if ($user == null) {
+if (!AccessControl::isLoggedIn()) {
     redirect('login.php');
-} elseif ($user->getRole() == UserRole::DeliveryWorker) {
-    redirect('deliveries.php?action=today');
-} else {
-    redirect('orders.php');
 }
+redirect(AccessControl::homePageFor(AccessControl::currentRole()));
