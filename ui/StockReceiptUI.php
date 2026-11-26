@@ -1,8 +1,7 @@
 <?php
 
 /**
- * StockReceiptUI: User Interface layer. The screens for Feature 1 (Add Stock Receipts).
- * Owner: Feature 1. Copy the pattern from CustomerUI.php.
+ * StockReceiptUI: User Interface layer. The screens for Feature 3 (Add Stock Receipts).
  *
  * stock_receipts.php                  -> showReceiptForm(): the form + the list of submitted receipts
  * form submitted (POST)               -> submitReceipt()
@@ -20,10 +19,8 @@ class StockReceiptUI
     }
 
     /**
-     * 1.1: the stock receipt form: supplier name, date received, and several rows of
-     * product (dropdown from $this->inventory->getAllProducts()) + quantity.
-     * Name the row inputs as arrays so PHP receives a list:
-     *   <select name="lines[0][product_id]"> ...   <input name="lines[0][quantity]" type="number" min="1">
+     * 3.1: the stock receipt form: supplier name, date received, and several rows of
+     * product.
      */
     public function showReceiptForm(array $errors = [], ?array $form = null): void
     {
@@ -112,12 +109,14 @@ class StockReceiptUI
                         <th>Receipt #</th>
                         <th>Date received</th>
                         <th>Supplier</th>
+                        <th>Entered by</th>
                     </tr>
                     <?php foreach ($receipts as $r): ?>
                         <tr>
                             <td><a href="stock_receipts.php?action=view&amp;id=<?= h($r->id) ?>">#<?= h($r->id) ?></a></td>
                             <td><?= h($r->dateReceived) ?></td>
                             <td><?= h($r->supplierName) ?></td>
+                            <td><?= h($r->enteredByName) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </table>
@@ -151,6 +150,7 @@ class StockReceiptUI
                 <tr><th>Supplier</th><td><?= h($receipt->supplierName) ?></td></tr>
                 <tr><th>Date received</th><td><?= h($receipt->dateReceived) ?></td></tr>
                 <tr><th>Recorded at</th><td><?= h($receipt->createdAt) ?></td></tr>
+                <tr><th>Recorded by</th><td><?= h($receipt->enteredByName) ?></td></tr>
             </table>
         </section>
 
@@ -183,16 +183,12 @@ class StockReceiptUI
 
     /**
      * 1.1 - 1.5: the form was submitted.
-     *   $result = $this->receipts->recordReceipt($supplier, $date, $post['lines'] ?? [], AccessControl::currentUserId());
-     *   no errors -> set_flash('Stock receipt #' . $result['id'] . ' saved.'); redirect('stock_receipts.php');
-     *   errors    -> $this->showReceiptForm($result['errors'], $post);
      */
     public function submitReceipt(array $post): void
     {
         AccessControl::requireRole(User::ROLE_STAFF);
 
         // 1. Hand what was typed to the logic layer, which checks it and saves it.
-        //    is_array() guards against a tampered form sending something that isn't a list.
         //    The signed-in user's id is saved as the person who entered the receipt (stock_receipts.entered_by).
         $lines = is_array($post['lines'] ?? null) ? $post['lines'] : [];
         $result = $this->receipts->recordReceipt(
@@ -202,7 +198,6 @@ class StockReceiptUI
             AccessControl::currentUserId()
         );
 
-        // 2. Saved? Show the receipt's unique number (1.5) and reload the page.
         if (count($result['errors']) === 0) {
             set_flash('Stock receipt #' . $result['id'] . ' saved. Stock levels have been updated.');
             redirect('stock_receipts.php');

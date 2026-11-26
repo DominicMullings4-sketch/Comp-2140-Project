@@ -1,8 +1,7 @@
 <?php
 
 /**
- * InventoryUI: User Interface layer. The screens for Feature 2 (Viewing and editing inventory).
- * Owner: Feature 2. Copy the pattern from CustomerUI.php: it's the same list + add/edit form layout.
+ * InventoryUI: User Interface layer. The screens for Feature 4 (Viewing and editing inventory).
  *
  * inventory.php          -> showItems(): list of items + "Add item" form
  * inventory.php?edit=3   -> showItems(): list of items + "Edit item" form for item 3
@@ -18,7 +17,7 @@ class InventoryUI
     }
 
     /**
-     * 2.1: shows the list of items and the add/edit form (name, quantity, selling price).
+     * 4.1: shows the list of items and the add/edit form (name, quantity, selling price).
      * Like CustomerUI::showCustomers(): ?edit=ID loads that item into the form with getProduct().
      */
     public function showItems(array $errors = [], ?array $form = null): void
@@ -26,7 +25,7 @@ class InventoryUI
         AccessControl::requireRole(User::ROLE_STAFF);
 
         $products = $this->inventory->getAllProducts();
-        $editId = $this->editId();   // NEW: null = adding, a number = editing that item
+        $editId = $this->editId();   // null = adding, a number = editing that item
 
         if ($form === null) {
             $form = ['name' => '', 'quantity' => '0', 'price' => ''];
@@ -46,7 +45,6 @@ class InventoryUI
             }
         }
 
-        // NEW: the form sends to inventory.php?edit=3 when editing, so submitItem() knows which item.
         $formAction = ($editId === null) ? 'inventory.php' : 'inventory.php?edit=' . $editId;
 
         render_header('Inventory');
@@ -54,7 +52,6 @@ class InventoryUI
         <h1>Inventory</h1>
 
         <section class="card">
-            <!-- NEW: heading and button change when editing -->
             <h2><?= $editId === null ? 'Add item' : 'Edit item' ?></h2>
 
             <?php if (count($errors) > 0): ?>
@@ -92,7 +89,7 @@ class InventoryUI
                         <th>Item</th>
                         <th class="number">Quantity</th>
                         <th class="number">Selling price</th>
-                        <th></th> <!-- NEW: column for the Edit links -->
+                        <th></th> 
                     </tr>
                     <?php foreach ($products as $p): ?>
                         <tr>
@@ -111,22 +108,20 @@ class InventoryUI
     }
 
     /**
-     * 2.2, 2.3: the add/edit form was submitted. Like CustomerUI::submitCustomer():
-     * addProduct() or updateProduct(); no errors -> set_flash + redirect; errors -> showItems($errors, $form).
+     * 4.2, 4.3: the add/edit form was submitted. 
      */
         public function submitItem(array $post): void
     {
         AccessControl::requireRole(User::ROLE_STAFF);
         $editId = $this->editId();   // NEW: null = adding, a number = editing that item
 
-        // 1. Read what was typed.
+        // 1. Reads input
         $form = [
             'name' => trim($post['name'] ?? ''),
             'quantity' => trim($post['quantity'] ?? ''),
             'price' => trim($post['price'] ?? ''),
         ];
 
-        // 2. NEW: adding or editing? Call the matching service method.
         if ($editId === null) {
             $errors = $this->inventory->addProduct($form['name'], $form['quantity'], $form['price']);
             $message = 'Item added.';
@@ -135,13 +130,11 @@ class InventoryUI
             $message = 'Item updated.';
         }
 
-        // 3. Saved? Show the right message and reload the page.
         if (count($errors) === 0) {
             set_flash($message);
             redirect('inventory.php');
         }
 
-        // 4. Not saved: show the page again with the errors and what they typed.
         $this->showItems($errors, $form);
     }
 

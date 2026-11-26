@@ -22,15 +22,13 @@ class DeliveryFeedbackUI
     /**
      * 6.1: the signed-in bearer's deliveries for today: order number, customer name, phone, address,
      * current status, and a small form per delivery: status dropdown (Delivered / Failed) + comment + Save.
-     * Call $this->delivery->refreshStatuses() first (5.6), then
-     * $this->feedback->getTodaysDeliveries(AccessControl::currentUserId()).
      */
     public function showMyDeliveries(array $errors = []): void
     {
-        AccessControl::requireRole(User::ROLE_BEARER);   // the gate: bearers only
+        AccessControl::requireRole(User::ROLE_BEARER);  
 
-        $this->delivery->refreshStatuses();   // 5.6 first, so today's assigned orders show "Out for delivery"
-        $deliveries = $this->feedback->getTodaysDeliveries((int) AccessControl::currentUserId());   // 6.1
+        $this->delivery->refreshStatuses();   
+        $deliveries = $this->feedback->getTodaysDeliveries((int) AccessControl::currentUserId());  
 
         // The only two outcomes a bearer can record (6.2).
         $outcomes = [Order::STATUS_DELIVERED, Order::STATUS_FAILED];
@@ -103,7 +101,7 @@ class DeliveryFeedbackUI
      */
     public function submitFeedback(array $post): void
     {
-        AccessControl::requireRole(User::ROLE_BEARER);   // the gate: bearers only
+        AccessControl::requireRole(User::ROLE_BEARER); 
 
         // Hand the posted values to the logic layer, which checks them and saves.
         // The bearer id comes from the session (who is signed in), NEVER from the form.
@@ -125,9 +123,8 @@ class DeliveryFeedbackUI
     }
 
     /**
-     * 6.4, 6.5: staff review every delivery's status and comment, with a status filter
+     * Staff reviews every delivery's status and comment, with a status filter
      * (a dropdown of Order::ALL_STATUSES that reloads the page as ?status=...).
-     *   $deliveries = $this->feedback->getDeliveries($_GET['status'] ?? null);
      */
     public function showFeedbackReview(array $errors = []): void
     {
@@ -140,15 +137,14 @@ class DeliveryFeedbackUI
         $formAction = 'delivery_feedback.php?status=' . urlencode($statusFilter);
         $outcomes = [Order::STATUS_DELIVERED, Order::STATUS_FAILED];
 
-        $this->delivery->refreshStatuses();                                 // 5.6, so the statuses are up to date
-        $deliveries = $this->feedback->getDeliveries($statusFilter);         // 6.4 (the service ignores "All" / bad values)
+        $this->delivery->refreshStatuses();                                 // forces statuses to be updated
+        $deliveries = $this->feedback->getDeliveries($statusFilter);         // aoolies filter by status
 
         render_header('Delivery Feedback');
         ?>
         <h1>Delivery Feedback</h1>
 
         <section class="card">
-            <!-- method="get": choosing a status reloads the page as delivery_feedback.php?status=... Nothing is saved. -->
             <form method="get" action="delivery_feedback.php">
                 <label for="status">Show deliveries with status</label>
                 <select id="status" name="status">

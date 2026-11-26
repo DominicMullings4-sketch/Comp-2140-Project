@@ -307,3 +307,70 @@ td.number, th.number { text-align: right; }
         align-items: stretch;
     }
 }
+
+/* ---------- Printing (the invoice's "Print invoice" button, or Ctrl + P on any page)
+   The browser uses these rules instead of the screen look when printing or saving as PDF.
+   .no-print   = hide this on paper (menus, links, buttons)
+   .print-only = show this ONLY on paper (hidden on screen by the first rule) */
+
+.print-only {
+    display: none;
+}
+
+@page {
+    margin: 1.5cm;   /* white space around the edge of every printed page */
+}
+
+@media print {
+    /* Hide the things that only make sense on screen */
+    .topbar, .flash, .no-print, button, .button {
+        display: none;
+    }
+    .print-only {
+        display: block;
+    }
+
+    /* Plain white page, full width, no boxes around the sections */
+    body {
+        background: #fff;
+        font-size: 11pt;
+    }
+    main {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+    .card {
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        margin: 0 0 1.5rem;
+    }
+
+    /* The business name at the top of the printed invoice */
+    .invoice-business {
+        margin: 0 0 0.5rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 2px solid #1f3a5f;
+        font-size: 20pt;
+        font-weight: 700;
+        color: #1f3a5f;
+    }
+
+    /* Keep the grey table headings when printing (browsers drop background colours by default) */
+    th {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Don't split one table row across two pages */
+    tr {
+        break-inside: avoid;
+    }
+
+    /* Links print as normal text */
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
+}

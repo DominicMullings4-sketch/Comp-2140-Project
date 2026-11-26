@@ -1,11 +1,10 @@
 <?php
 
 /**
- * CustomerUI: User Interface layer. The screens for Feature 3 (Storing Customer Information).
- * WORKED EXAMPLE: fully built. Copy this class's pattern for your own UI class.
+ * CustomerUI: User Interface layer. The screens for Feature 1 (Supply Personal Information).
  *
  * customers.php          -> showCustomers(): list of customers + "Add customer" form
- * customers.php?edit=5   -> showCustomers(): list of customers + "Edit customer" form for customer 5
+ * customers.php?edit=?   -> showCustomers(): list of customers + "Edit customer" form customer id '?'
  * form submitted (POST)  -> submitCustomer()
  */
 class CustomerUI
@@ -18,7 +17,7 @@ class CustomerUI
     }
 
     /**
-     * 3.3: shows the list of customers and the add/edit form.
+     * 1.3: shows the list of customers and the add/edit form.
      * $errors and $form are only passed in by submitCustomer() when a save failed,
      * so the form shows the messages AND what the user typed.
      */
@@ -113,7 +112,7 @@ class CustomerUI
     }
 
     /**
-     * 3.1, 3.2, 3.3: the add/edit form was submitted. Hands what was typed to the logic layer,
+     * 1.1, 1.2, 1.3: the add/edit form was submitted. Hands what was typed to the logic layer,
      * which checks the rules and saves.
      */
     public function submitCustomer(array $post): void

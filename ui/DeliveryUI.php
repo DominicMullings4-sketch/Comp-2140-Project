@@ -3,10 +3,7 @@
 /**
  * DeliveryUI: User Interface layer. The screens for Feature 5 (Confirm Delivery).
  * Owner: Feature 5. Copy the pattern from CustomerUI.php.
- *
- * deliveries.php                 -> showDeliveries()   (today's date)
- * deliveries.php?date=2026-11-26 -> showDeliveries()   (another date)
- * form submitted (POST)          -> submitAssignment()
+         -> submitAssignment()
  */
 class DeliveryUI
 {
@@ -18,11 +15,7 @@ class DeliveryUI
     }
 
     /**
-     * 5.1 - 5.6: orders due on a date, each with its status, assigned bearer, and a bearer dropdown
-     * ($this->delivery->getBearers()) + Assign button.
-     * Call $this->delivery->refreshStatuses() first (5.6), then $this->delivery->getOrdersForDate($date).
-     * Layout (styles in ui/css/style.css, "Deliveries page" section): a banner with the date and totals,
-     * one card per order on the left, and the date picker on the right.
+     * 5.1 - 5.5: orders due on a date, each with its status, assigned bearer, and a bearer dropdown.
      */
     public function showDeliveries(array $errors = []): void
     {
@@ -35,10 +28,9 @@ class DeliveryUI
         $orders = $this->delivery->getOrdersForDate($date);  // 5.1, 5.2: the orders due on $date
         $bearers = $this->delivery->getBearers();            // 5.5: every bearer, for the dropdowns
 
-        // The Assign forms post back with the same date, so the page stays on that day afterwards.
         $formAction = 'deliveries.php?date=' . urlencode($date);
 
-        // The date written out in full for the banner, e.g. "Thursday, 26 November 2026".
+        // The date written out in full for the banner
         $dateInWords = date('l, j F Y', strtotime($date));
 
         // The three totals in the banner. Count each order once, in the group it belongs to.
@@ -61,7 +53,6 @@ class DeliveryUI
 
         render_header('Deliveries');
         ?>
-        <!-- Banner: the date, the page title and the totals for that day -->
         <section class="deliveries-banner">
             <p class="banner-date"><?= h($dateInWords) ?></p>
             <h1>Deliveries</h1>
@@ -82,7 +73,6 @@ class DeliveryUI
 
         <div class="deliveries-layout">
 
-            <!-- Left: one card per order due on this date -->
             <div class="order-cards">
                 <h2>Orders due <span class="count"><?= $stillToDeliver ?></span></h2>
 
@@ -92,7 +82,6 @@ class DeliveryUI
 
                 <?php foreach ($orders as $o): ?>
                     <?php
-                    // The colour of the status label: one CSS class per status.
                     if ($o->status === Order::STATUS_DELIVERED) {
                         $statusClass = 'status-delivered';
                     } elseif ($o->status === Order::STATUS_FAILED) {
@@ -145,7 +134,6 @@ class DeliveryUI
                 <?php endforeach; ?>
             </div>
 
-            <!-- Right: choose which day to look at -->
             <aside class="card date-panel">
                 <h2>Delivery date</h2>
                 <!-- method="get" only reloads the page as deliveries.php?date=... Nothing is saved. -->
@@ -164,16 +152,12 @@ class DeliveryUI
 
     /**
      * 5.5: the Assign button was pressed for one order.
-     *   $errors = $this->delivery->assignBearer((int) $post['order_id'], (int) $post['bearer_id']);
-     *   no errors -> set_flash('Bearer assigned.'); redirect('deliveries.php');
-     *   errors    -> $this->showDeliveries($errors);
      */
     public function submitAssignment(array $post): void
     {
         AccessControl::requireRole(User::ROLE_STAFF);   // the gate: staff only
 
         // Hand the two posted values to the logic layer, which checks the bearer and saves.
-        // (int) turns the posted text into numbers; a missing value becomes 0 (no user or order has id 0).
         $errors = $this->delivery->assignBearer((int) ($post['order_id'] ?? 0), (int) ($post['bearer_id'] ?? 0));
 
         // Saved? Redirect (Post -> Redirect -> Get), so pressing refresh can't submit it twice.

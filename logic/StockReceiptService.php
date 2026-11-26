@@ -130,11 +130,19 @@ class StockReceiptService
 
     /**
      * Every stock receipt that has been saved, newest first, for the "Submitted receipts" list.
-     * Displays: id, supplier, date. The lines are loaded by getReceipt().
+     * Displays: id, supplier, date, who entered it. The lines are loaded by getReceipt().
      */
     public function getAllReceipts(): array
     {
-        $rows = $this->db->select('SELECT * FROM stock_receipts ORDER BY receipt_id DESC', []);
+        // The JOIN adds the name of the user who entered each receipt, renamed to entered_by_name
+        // so StockReceipt::fromRow() picks it up.
+        $rows = $this->db->select(
+            'SELECT r.*, u.name AS entered_by_name
+             FROM stock_receipts r
+             JOIN users u ON u.user_id = r.entered_by
+             ORDER BY r.receipt_id DESC',
+            []
+        );
 
         $receipts = [];
         foreach ($rows as $row) {
@@ -150,7 +158,13 @@ class StockReceiptService
     public function getReceipt(int $id): ?StockReceipt
     {
         // 1. The receipt itself
-        $rows = $this->db->select('SELECT * FROM stock_receipts WHERE receipt_id = :id', ['id' => $id]);
+        $rows = $this->db->select(
+            'SELECT r.*, u.name AS entered_by_name
+             FROM stock_receipts r
+             JOIN users u ON u.user_id = r.entered_by
+             WHERE r.receipt_id = :id',
+            ['id' => $id]
+        );
         if (count($rows) === 0) {
             return null;   // no receipt with that id
         }

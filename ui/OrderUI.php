@@ -168,7 +168,9 @@ class OrderUI
 
         render_header('Invoice #' . $order->id);
         ?>
-        <p><a href="orders.php">&larr; New order</a></p>
+        <p class="no-print"><a href="orders.php">&larr; New order</a></p>
+        <!-- Only shows on paper / Save as PDF (see "Printing" in ui/css/style.css) -->
+        <p class="print-only invoice-business">Variety Corner Ja</p>
         <h1>Invoice: Order #<?= h($order->id) ?></h1>
 
         <section class="card">
@@ -204,7 +206,8 @@ class OrderUI
                     <th class="number"><?= h(money($order->total())) ?></th>
                 </tr>
             </table>
-            <button type="button" onclick="window.print()">Print invoice</button>
+            <!-- window.print() opens the browser's print window; choose "Save as PDF" there for a PDF file. -->
+            <button type="button" class="no-print" onclick="window.print()">Print invoice</button>
         </section>
         <?php
         render_footer();
