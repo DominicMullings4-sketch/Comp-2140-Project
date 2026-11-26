@@ -11,7 +11,6 @@ class StockReceipt
     public string $dateReceived;   // 'YYYY-MM-DD'
     public ?string $createdAt = null;   // stock_receipts.entered_at
     public ?int $enteredBy = null;      // the user who recorded it (stock_receipts.entered_by)
-    public ?string $enteredByName = null;   // that user's name, for display only (filled when read with a JOIN)
 
     /** @var StockReceiptLine[] */
     public array $lines = [];
@@ -35,7 +34,6 @@ class StockReceipt
         $receipt->dateReceived = $row['date_received'];
         $receipt->createdAt = $row['entered_at'];
         $receipt->enteredBy = (int) $row['entered_by'];
-        $receipt->enteredByName = $row['entered_by_name'] ?? null;   // only there if the query JOINed users
         return $receipt;
     }
 }
