@@ -140,11 +140,11 @@ class DeliveryUI
             <td>
                 <?= h($o->customerName) ?>
                 <?php if (count($missing) > 0): ?>
-                    <br><span class="missing">Incomplete: no <?= h(implode(' or ', $missing)) ?></span>
+                    <br><span class="missing">Incomplete: <?= h(implode('; ', $missing)) ?></span>
                 <?php endif; ?>
             </td>
-            <td><?= trim((string) $o->customerPhone) === '' ? '<span class="missing">Missing</span>' : h($o->customerPhone) ?></td>
-            <td><?= trim((string) $o->customerAddress) === '' ? '<span class="missing">Missing</span>' : h($o->customerAddress) ?></td>
+            <td><?= $this->detailCell($o->customerPhone, $this->delivery->phoneProblem($o->customerPhone)) ?></td>
+            <td><?= $this->detailCell($o->customerAddress, $this->delivery->addressProblem($o->customerAddress)) ?></td>
             <td>
                 <?php foreach ($o->lines as $line): ?>
                     <?= h($line->quantity) ?> &times; <?= h($line->productName) ?><br>
@@ -187,6 +187,21 @@ class DeliveryUI
             </td>
         </tr>
         <?php
+    }
+
+    /**
+     * A contact number or address cell: the value as normal, the value in red if it can't be used,
+     * or a red "Missing" if it is blank.
+     */
+    private function detailCell(?string $value, ?string $problem): string
+    {
+        if (trim((string) $value) === '') {
+            return '<span class="missing">Missing</span>';
+        }
+        if ($problem !== null) {
+            return '<span class="missing">' . h($value) . '</span>';
+        }
+        return h($value);
     }
 
     /** The dispatch date in the address (?date=YYYY-MM-DD), or today if it is missing or not a real date. */

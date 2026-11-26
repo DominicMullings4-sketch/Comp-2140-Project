@@ -115,21 +115,65 @@ class DeliveryService
         return array_values($orders);
     }
 
+    // Address text that means "no address was given" (compared in lower case, without dots).
+    private const PLACEHOLDER_ADDRESSES = [
+        'na', 'n/a', 'none', 'nil', 'null', 'unknown', 'tbd', 'tba', 'pending',
+        'no address', 'not given', 'not provided', 'same', 'test', 'xxx', 'x',
+    ];
+
     /**
-     * AC-4.2: the details that are missing for this order to be delivered.
-     * An empty list means the delivery information is complete.
-     * @return string[]
+     * AC-4.2: what is wrong with this order's delivery information.
+     * An empty list means it is complete. Otherwise the order is flagged as incomplete.
+     * @return string[] for example ['no contact number', 'delivery address looks incomplete']
      */
     public function getMissingDetails(Order $order): array
     {
-        $missing = [];
-        if (trim((string) $order->customerPhone) === '') {
-            $missing[] = 'contact number';
+        $problems = [];
+        $phoneProblem = $this->phoneProblem($order->customerPhone);
+        if ($phoneProblem !== null) {
+            $problems[] = $phoneProblem;
         }
-        if (trim((string) $order->customerAddress) === '') {
-            $missing[] = 'delivery address';
+        $addressProblem = $this->addressProblem($order->customerAddress);
+        if ($addressProblem !== null) {
+            $problems[] = $addressProblem;
         }
-        return $missing;
+        return $problems;
+    }
+
+    /**
+     * Null if the contact number can be used to reach the customer.
+     * The customer form only checks the characters, so a number like '0000000' or '-------' can
+     * still be saved. A usable number needs 7 to 15 digits that are not all the same digit.
+     */
+    public function phoneProblem(?string $phone): ?string
+    {
+        if (trim((string) $phone) === '') {
+            return 'no contact number';
+        }
+        $digits = preg_replace('/\D/', '', (string) $phone);
+        if (strlen($digits) < 7 || strlen($digits) > 15 || preg_match('/^(\d)\1*$/', $digits) === 1) {
+            return 'contact number is not valid';
+        }
+        return null;
+    }
+
+    /**
+     * Null if the delivery address can be used. Blank, a placeholder such as 'N/A' or 'none',
+     * or text without any letters (e.g. '-', '12') is not an address a bearer can deliver to.
+     */
+    public function addressProblem(?string $address): ?string
+    {
+        $text = trim((string) $address);
+        if ($text === '') {
+            return 'no delivery address';
+        }
+        $normalised = strtolower(trim(str_replace('.', '', $text)));
+        if (in_array($normalised, self::PLACEHOLDER_ADDRESSES, true)
+            || preg_match('/[a-z]/i', $text) !== 1
+            || strlen($text) < 5) {
+            return 'delivery address looks incomplete';
+        }
+        return null;
     }
 
     /** Every bearer, for the "assign a bearer" dropdown (SR-4.3). @return User[] */
