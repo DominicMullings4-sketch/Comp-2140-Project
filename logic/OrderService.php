@@ -1,21 +1,8 @@
 <?php
 
 /**
- * OrderService: Application Logic layer. Business rules AND SQL for Feature 4 (Record Orders).
- * Owner: Feature 4. Copy the style of CustomerService.php.
+ * OrderService: Application Logic layer. Business rules AND SQL for Feature 2 (Recieve Products).
  *
- * Tip for reading an order with the customer's details: use a JOIN and name the extra columns so
- * Order::fromRow() picks them up:
- *   SELECT o.*, c.name AS customer_name, c.phone AS customer_phone,
- *          c.delivery_address AS customer_address, c.email AS customer_email,
- *          d.delivery_id, d.delivery_date, d.status, d.worker_id, d.comment
- *   FROM orders o
- *   JOIN customers c ON c.customer_id = o.customer_id
- *   LEFT JOIN deliveries d ON d.order_id = o.order_id
- *   WHERE o.order_id = :id
- * And for the lines with item names:
- *   SELECT l.*, p.name AS product_name FROM order_lines l JOIN items p ON p.item_id = l.item_id
- *   WHERE l.order_id = :id
  */
 class OrderService
 {
@@ -31,32 +18,13 @@ class OrderService
     }
 
     /**
-     * 4.1, 4.2, 4.5, 4.6 (and 5.1): records an order for a customer.
-     *
-     * $lines comes from the form as a list like:
-     *   [ ['product_id' => '3', 'quantity' => '2'], ['product_id' => '1', 'quantity' => '1'] ]
-     *
-     * Rules to check before saving:
-     *   4.1  the customer exists and there is at least one line
-     *   4.2  every quantity is a whole number of at least 1 and not more than the product's stock
-     *
-     * If all pass:
-     *   - 5.1: $deliveryDate = $this->delivery->calculateDeliveryDate(new DateTime());
-     *   - save in ONE transaction (see DataAccess.php):
-     *       1. INSERT INTO orders (customer_id, created_at) VALUES (...)
-     *       2. $orderId = $this->db->lastInsertId();
-     *       3. INSERT INTO deliveries (order_id, delivery_date) VALUES (...)       (status starts as 'Pending')
-     *       4. for each line: INSERT INTO order_lines (order_id, item_id, quantity_ordered, unit_price) ...
-     *          (unit_price = the item's selling price right now)
-     *       5. for each line: UPDATE items SET stock_quantity = stock_quantity - :qty WHERE item_id = :item_id   (4.5)
-     *
-     * @return array ['errors' => string[], 'id' => int|null]  (id is the new order id when saved)
+     * 2.1, 2.2, 2.5, 2.6: records an order for a customer.
      */
     public function createOrder(int $customerId, array $lines): array
     {
         $errors = [];
 
-        // PART 1 - 4.1: the customer must exist
+        // PART 1 - 4.1: checks if the customer must exist
         $customer = $this->db->select('SELECT customer_id FROM customers WHERE customer_id = :id', ['id' => $customerId]);
         if (count($customer) === 0) {
             $errors[] = 'Choose a customer.';
@@ -124,9 +92,9 @@ class OrderService
         $now = new DateTime();
         $deliveryDate = $this->delivery->calculateDeliveryDate($now);   // 5.1, 5.3, 5.4 (your Step 1)
 
-        $this->db->beginTransaction();
+        $this->db->beginTransaction();      // Very important as multiple tables are to be updated to complete the transaction.
         try {
-            // Step 1: the order itself, linked to the customer (4.6)
+            // Step 1: the order itself, linked to the customer
             $this->db->execute(
                 'INSERT INTO orders (customer_id, created_at) VALUES (:customer, :created)',
                 ['customer' => $customerId, 'created' => $now->format('Y-m-d H:i:s')]
@@ -135,8 +103,8 @@ class OrderService
             // Step 2: the id MySQL just gave the order
             $orderId = $this->db->lastInsertId();
 
-            // Step 2b: the order's delivery (5.1), in the deliveries table.
-            // Status starts as 'Pending' (5.2) and no worker is assigned yet (the table's defaults).
+            // Step 2b: the order's delivery (2.3), in the deliveries table.
+            // Status starts as 'Pending' and no worker is assigned yet (the table's defaults).
             $this->db->execute(
                 'INSERT INTO deliveries (order_id, delivery_date) VALUES (:order, :delivery)',
                 ['order' => $orderId, 'delivery' => $deliveryDate]
@@ -155,7 +123,7 @@ class OrderService
                     ]
                 );
 
-                // Step 4: reduce that product's stock (4.5)
+                // Step 4: reduce that product's stock
                 $this->db->execute(
                     'UPDATE items SET stock_quantity = stock_quantity - :quantity WHERE item_id = :product',
                     ['quantity' => $line['quantity'], 'product' => $line['product_id']]
@@ -210,8 +178,6 @@ class OrderService
     /**
      * Saved orders, newest first, with each customer's name and phone and the delivery status, for the order lists.
      * Every order when $customerId is null; only that customer's orders when an id is given.
-     * (The lines are loaded by getOrder() when one is opened.)
-     * @return Order[]
      */
     public function getAllOrders(?int $customerId = null): array
     {

@@ -2,7 +2,6 @@
 
 /**
  * DeliveryFeedbackService: Application Logic layer. Business rules AND SQL for Feature 6 (Provide Delivery Feedback).
- * Owner: Feature 6. Copy the style of CustomerService.php.
  */
 class DeliveryFeedbackService
 {
@@ -17,12 +16,6 @@ class DeliveryFeedbackService
 
     /**
      * 6.1: the signed-in bearer's deliveries for today.
-     * SQL: SELECT o.*, c.name AS customer_name, c.phone AS customer_phone, c.delivery_address AS customer_address,
-     *             d.delivery_id, d.delivery_date, d.status, d.worker_id, d.comment
-     *      FROM deliveries d
-     *      JOIN orders o ON o.order_id = d.order_id
-     *      JOIN customers c ON c.customer_id = o.customer_id
-     *      WHERE d.worker_id = :bearer AND d.delivery_date = :today
      * @return Order[]
      */
     public function getTodaysDeliveries(int $bearerId): array
@@ -48,15 +41,11 @@ class DeliveryFeedbackService
     }
 
     /**
-     * 6.2, 6.3: marks a delivery 'Delivered' or 'Failed' and adds a comment.
+     * 6.1, 6.2: marks a delivery 'Delivered' or 'Failed' and adds a comment.
      * Bearers AND office staff can record an outcome:
      *   - a bearer only for a delivery assigned to them (so nobody can change someone else's delivery)
      *   - office staff for any delivery that has a bearer assigned (e.g. when a bearer phones it in)
      * The role is looked up from the database here, not taken from the UI.
-     * SQL: UPDATE deliveries
-     *      SET status = :status, comment = :comment, outcome_recorded_at = NOW(), outcome_recorded_by = :recordedBy
-     *      WHERE order_id = :id AND worker_id IS NOT NULL   (+ AND worker_id = :bearer for a bearer)
-     * @return string[] error messages (empty = saved)
      */
     public function updateDelivery(int $orderId, int $userId, string $status, string $comment): array
     {
@@ -67,14 +56,14 @@ class DeliveryFeedbackService
             $errors[] = 'Please choose Delivered or Failed.';
         }
 
-        // Who is recording it? Staff and bearers have different limits (Check 2).
+        // Who is recording it? Staff and bearers have different limits.
         $user = $this->users->getUser($userId);
         $isStaff = $user !== null && $user->role === User::ROLE_STAFF;
         $isBearer = $user !== null && $user->role === User::ROLE_BEARER;
 
         // Check 2: which deliveries this user may update.
         // Both: the delivery must exist and have a bearer assigned.
-        // A bearer: it must also be assigned to THEM. (Built in pieces, like getDeliveries().)
+        // A bearer: it must also be assigned to them.
         $where = 'WHERE order_id = :id AND worker_id IS NOT NULL';
         $whereParams = ['id' => $orderId];
         if (!$isStaff) {
@@ -93,12 +82,12 @@ class DeliveryFeedbackService
             }
         }
 
-        // If any check failed, stop here. Nothing is saved.
+        // If any any errors are present, stop here. Nothing is saved.
         if (count($errors) > 0) {
             return $errors;
         }
 
-        // Save the outcome (6.2), the comment (6.3), and when and by whom it was recorded.
+        // Save the outcome (6.1), the comment (6.3), and when and by whom it was recorded.
         // The same WHERE as Check 2 is a safety net: a bearer still can't touch another bearer's delivery.
         // An empty comment is saved as NULL ("no comment") rather than an empty string.
         $this->db->execute(
@@ -115,10 +104,7 @@ class DeliveryFeedbackService
     }
 
     /**
-     * 6.4, 6.5: every delivery with its status and comment; only one status if a filter is chosen.
-     * Read FROM deliveries d JOIN orders o ON o.order_id = d.order_id (as in getTodaysDeliveries).
-     * Add "WHERE d.status = :status" only when $statusFilter isn't null.
-     * @return Order[]
+     * 6.3: Permits the system to retrieve deliveries by their status: Pending, Delivered, Failed.
      */
     public function getDeliveries(?string $statusFilter): array
     {
@@ -132,7 +118,6 @@ class DeliveryFeedbackService
                 LEFT JOIN users u ON u.user_id = d.worker_id';
         $params = [];
 
-        // 6.5: only filter when a real status was chosen.
         // "All" (an empty value) or anything that isn't one of the four statuses means "no filter".
         if ($statusFilter !== null && in_array($statusFilter, Order::ALL_STATUSES, true)) {
             $sql .= ' WHERE d.status = :status';

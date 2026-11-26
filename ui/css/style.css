@@ -165,3 +165,145 @@ td.number, th.number { text-align: right; }
         min-width: 12rem; 
     }
 }
+
+/* ---------- Deliveries page (DeliveryUI::showDeliveries)
+   Banner with the date and totals, one card per order, date picker on the right.
+   These class names are only used on deliveries.php, so other pages are not affected. */
+
+/* Banner: dark blue box at the top of the page */
+.deliveries-banner {
+    background: #1f3a5f;
+    color: #fff;
+    border-radius: 12px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+}
+.deliveries-banner h1 {
+    margin: 0;
+    font-size: 2.2rem;
+}
+.banner-date {
+    margin: 0 0 0.25rem;
+    color: #b9cde6;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.banner-totals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin-top: 1rem;
+    color: #dbe7f5;
+}
+.total-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin-right: 0.3rem;
+}
+
+/* Two columns: order cards (wide, left) and the date picker (narrow, right) */
+.deliveries-layout {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 1.5rem;
+    align-items: start;
+}
+.deliveries-layout h2 {
+    margin-top: 0;
+}
+
+/* The small grey bubble with the number of orders */
+.count {
+    display: inline-block;
+    padding: 0.1rem 0.6rem;
+    background: #dde3ea;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    vertical-align: middle;
+}
+
+/* One card per order */
+.order-card {
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    overflow: hidden;   /* keeps the grey action strip inside the rounded corners */
+}
+.order-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem 0;
+}
+.order-number {
+    font-family: Consolas, Menlo, monospace;
+    font-size: 0.85rem;
+    color: #6b7785;
+}
+.order-card h3 {
+    margin: 0.4rem 1.25rem 0.75rem;
+    font-size: 1.35rem;
+}
+.order-card-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2.5rem;
+    padding: 0 1.25rem 1rem;
+}
+.detail-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6b7785;
+}
+
+/* Grey strip at the bottom of each card with the Assign form */
+.order-card-actions {
+    background: #eef2f6;
+    border-top: 1px solid #dde3ea;
+    padding: 0.75rem 1.25rem;
+}
+.assign-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.assign-row button {
+    margin-top: 0;   /* the general button rule adds space above; not needed in a row */
+}
+.done-note {
+    margin: 0;
+    color: #6b7785;
+}
+
+/* Coloured status labels (the class is chosen in showDeliveries) */
+.status-pill {
+    padding: 0.2rem 0.7rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.status-pending   { background: #fff0c6; color: #714c08; }
+.status-out       { background: #dbe7f5; color: #1f3a5f; }
+.status-delivered { background: #e3f4e8; color: #1d6b35; }
+.status-failed    { background: #fde8e8; color: #9b1c1c; }
+
+/* Phones: one column, date picker above the orders, Assign form stacked */
+@media (max-width: 700px) {
+    .deliveries-layout {
+        grid-template-columns: 1fr;
+    }
+    .date-panel {
+        order: -1;   /* show the date picker first on small screens */
+    }
+    .deliveries-banner h1 {
+        font-size: 1.7rem;
+    }
+    .assign-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

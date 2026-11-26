@@ -1,8 +1,7 @@
 <?php
 
 /**
- * InventoryService: Application Logic layer. Business rules AND SQL for Feature 2 (Viewing and editing inventory).
- * Owner: Feature 2. Copy the style of CustomerService.php.
+ * InventoryService: Application Logic layer. Business rules AND SQL for Feature 5 (Store Products).
  */
 class InventoryService
 {
@@ -14,9 +13,7 @@ class InventoryService
     }
 
     /**
-     * 2.1: every product, ordered by name. Features 1 and 4 also use this for their product dropdowns.
-     * SQL: SELECT * FROM items ORDER BY name   -> turn each row into a Product with Product::fromRow()
-     * @return Product[]
+     * 5.1: every product, ordered by name. Features 2 and 4 also use this for their product dropdowns.
      */
     public function getAllProducts(): array
     {
@@ -30,7 +27,7 @@ class InventoryService
         return $products;
     }
 
-    /** One product, or null if not found. Features 1 and 4 use this to check a chosen product exists. */
+    /** One product, or null if not found. Features 1 and 3 use this to check a chosen product exists. */
     public function getProduct(int $id): ?Product
     {
         $rows = $this->db->select('SELECT * FROM items WHERE item_id = :id', ['id'=>$id]);
@@ -54,7 +51,7 @@ class InventoryService
     }
 
     /**
-     * 2.3: adds a new product. Check: name required and not already used,
+     * 5.3: adds a new product. Check: name required and not already used,
      * quantity a whole number >= 0, selling price a number >= 0.
      * The values arrive as text from the form, so check them before converting.
      * SQL: INSERT INTO items (name, stock_quantity, selling_price) VALUES (:name, :quantity, :price)

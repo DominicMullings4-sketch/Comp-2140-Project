@@ -1,11 +1,11 @@
 <?php
 
 /**
- * CustomerService: Application Logic layer. Business rules AND SQL for Feature 3 (Storing Customer Information).
+ * CustomerService: Application Logic layer. Business rules AND SQL for Feature 1 (Supply Personal Information).
  *
  * The pattern: the page hands over what the user typed, the service checks the rules,
  * and only if everything passes does it save (through DataAccess).
- * Methods in this class are responible for returning errors. 
+ * Methods in this class are responible for catching and returning errors. 
  * Methods that save return a list of error messages: an EMPTY list means it worked.
  */
 class CustomerService
@@ -17,7 +17,7 @@ class CustomerService
         $this->db = new DataAccess();
     }
 
-    /** 3.3: every customer, for the list. @return Customer[] */
+    // 1.3: Returns every customer.
     public function getAllCustomers(): array
     {
         $rows = $this->db->select('SELECT * FROM customers ORDER BY name', []);
@@ -39,8 +39,7 @@ class CustomerService
     }
 
     /**
-     * 3.1, 3.2: saves a new customer if the details pass every rule.
-     * @return string[] error messages (empty = saved)
+     * 1.1, 1.2: saves a new customer if the details pass every rule.
      */
     public function addCustomer(string $name, string $address, string $phone, string $email): array
     {
@@ -58,9 +57,7 @@ class CustomerService
     }
 
     /**
-     * 3.3: saves changes to a customer. The duplicate check (3.2) applies here too,
-     * otherwise editing would be a way around it.
-     * @return string[] error messages (empty = saved)
+     * Update a customer's records. 
      */
     public function updateCustomer(int $id, string $name, string $address, string $phone, string $email): array
     {
@@ -83,9 +80,8 @@ class CustomerService
     }
 
     /**
-     * The rules for customer details. $excludeId is the customer being edited (0 when adding),
-     * so a customer doesn't count as a duplicate of themselves.
-     * @return string[] error messages
+     * The rules for customer details. $excludeId is the customer ID of the customer being edited (0 when adding, actual ID when editing),
+     * if prevents it appearing as if there is a duplicate entry.
      */
     private function checkDetails(string $name, string $address, string $phone, string $email, int $excludeId): array
     {
