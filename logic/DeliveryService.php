@@ -202,12 +202,10 @@ class DeliveryService
             return ['Order #' . $orderId . ' has already been handed over, so its bearer cannot be changed.'];
         }
 
-        // The time comes from PHP (the app's TIMEZONE), the same clock used for order times,
-        // so it is right even if MySQL's own clock is set to a different time zone.
         $this->db->execute(
-            'UPDATE deliveries SET worker_id = :bearer, assigned_at = :now
+            'UPDATE deliveries SET worker_id = :bearer, assigned_at = NOW()
              WHERE order_id = :order AND status = :pending',
-            ['bearer' => $bearerId, 'now' => date('Y-m-d H:i:s'), 'order' => $orderId, 'pending' => Order::STATUS_PENDING]
+            ['bearer' => $bearerId, 'order' => $orderId, 'pending' => Order::STATUS_PENDING]
         );
         return [];
     }
@@ -239,14 +237,12 @@ class DeliveryService
 
         // The WHERE repeats the checks, so the order can't be handed over twice
         // even if two people press the button at the same moment.
-        // The handover time comes from PHP (the app's TIMEZONE), like the order times (AC-4.3).
         $changed = $this->db->execute(
             'UPDATE deliveries
-             SET status = :out, handed_over_at = :now, handed_over_by = :recordedBy
+             SET status = :out, handed_over_at = NOW(), handed_over_by = :recordedBy
              WHERE order_id = :order AND worker_id IS NOT NULL AND status = :pending',
             [
                 'out' => Order::STATUS_OUT_FOR_DELIVERY,
-                'now' => date('Y-m-d H:i:s'),
                 'recordedBy' => $recordedBy,
                 'order' => $orderId,
                 'pending' => Order::STATUS_PENDING,
